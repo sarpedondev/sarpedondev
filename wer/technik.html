@@ -352,21 +352,6 @@
         color: var(--accent-color);
         text-shadow: 0 0 15px var(--accent-color);
       }
-
-      #restart-btn {
-        background: var(--accent-color);
-        border: 2px solid #fff;
-        color: #000;
-        padding: 15px 30px;
-        font-size: 2vw;
-        border-radius: 10px;
-        cursor: pointer;
-        transition: all 0.2s ease;
-      }
-
-      #restart-btn:hover {
-        transform: scale(1.1);
-      }
     </style>
   </head>
 
@@ -423,7 +408,6 @@
       <div class="game-over-content">
         <p id="game-over-text"></p>
       </div>
-      <button id="restart-btn">Nochmal spielen</button>
     </div>
     <script>
       // === DEINE FRAGEN HIER EINTRAGEN ===
@@ -482,8 +466,6 @@
       const gameOverText = document.getElementById("game-over-text");
 
       document.getElementById("start-btn").onclick = playIntro;
-      document.getElementById("restart-btn").onclick = () =>
-        window.location.reload();
       document.getElementById("lifeline-5050").onclick = useLifeline5050;
       document.getElementById("lifeline-audience").onclick =
         useLifelineAudience;
