@@ -63,7 +63,8 @@
         color: var(--main-text-color);
         font-family: var(--font-family);
         margin: 0;
-        overflow: hidden;
+        overflow-x: hidden; /* Prevent horizontal scroll */
+        overflow-y: auto; /* Allow vertical scroll on smaller screens */
         text-align: center;
       }
 
@@ -79,6 +80,8 @@
         justify-content: center;
         align-items: center;
         z-index: 10;
+        padding: 15px; /* Add some padding for smaller screens */
+        box-sizing: border-box; /* Include padding in width/height calculation */
       }
 
       #start-screen {
@@ -93,7 +96,7 @@
         left: 0;
         width: 100%;
         height: 100%;
-        z-index: 1;
+        z-index: -1; /* --- FIX: Set to -1 to be truly in the background --- */
         overflow: hidden;
         background: var(--main-bg-color);
       }
@@ -125,8 +128,16 @@
       #start-btn:hover {
         transform: scale(1.1);
       }
-
+      
       /* --- GAME LAYOUT & CENTERING --- */
+      #game-screen {
+        position: relative; /* Allow children to be positioned relative to it */
+        height: auto;
+        min-height: 100vh;
+        justify-content: flex-start; /* Align content to the top */
+        padding-top: 5vh;
+      }
+
       .main-game-area {
         width: 100%;
         height: 100%;
@@ -215,7 +226,7 @@
         border: 2px solid var(--button-border);
         border-radius: 10px;
         padding: 20px;
-        font-size: 2.2vw;
+        font-size: clamp(16px, 2.2vw, 24px); /* Responsive font size */
         margin-bottom: 20px;
         box-shadow: 0 0 20px rgba(252, 163, 17, 0.5);
         min-height: 100px;
@@ -236,7 +247,7 @@
         border: 2px solid var(--button-border);
         border-radius: 10px;
         padding: 15px;
-        font-size: 1.8vw;
+        font-size: clamp(14px, 1.8vw, 20px); /* Responsive font size */
         color: var(--main-text-color);
         cursor: pointer;
         transition: all 0.2s ease;
@@ -245,6 +256,8 @@
         text-align: left;
         opacity: 0;
         visibility: hidden;
+        /* --- FIX: Add will-change for smoother animation --- */
+        will-change: background-color, border-color, color;
       }
 
       .pop-in {
@@ -298,7 +311,7 @@
         display: flex;
         flex-direction: column-reverse;
         opacity: 0;
-        transition: opacity 1s ease-in;
+        transition: opacity 1s ease-in, transform 0.5s ease;
         z-index: 50;
       }
 
@@ -307,7 +320,7 @@
       }
 
       .prize-item {
-        font-size: 1.5vw;
+        font-size: clamp(12px, 1.5vw, 18px); /* Responsive font size */
         padding: 5px 15px;
         border-radius: 5px;
         margin-bottom: 5px;
@@ -352,6 +365,64 @@
         color: var(--accent-color);
         text-shadow: 0 0 15px var(--accent-color);
       }
+      
+      /* --- FIX: RESPONSIVE DESIGN FOR TABLET & MOBILE --- */
+      @media (max-width: 1200px) {
+        #game-screen {
+          /* The game-screen is already set to flex-column which is good */
+          display: flex;
+          flex-direction: column;
+          justify-content: flex-start; /* Start from top */
+          align-items: center;
+          padding-top: 3vh;
+          position: relative; /* Remove absolute */
+          height: auto; /* Allow content to determine height */
+          min-height: 100vh;
+        }
+
+        .main-game-area {
+          order: 1; /* Main game area comes first */
+          width: 95vw;
+          max-width: 700px;
+          height: auto;
+        }
+
+        .prize-ladder-area {
+          order: 2; /* Prize ladder comes second */
+          position: relative; /* Override absolute positioning */
+          top: auto;
+          right: auto;
+          transform: none; /* Reset transform */
+          width: 95vw;
+          max-width: 700px;
+          margin-top: 40px; /* Space between game and ladder */
+          margin-bottom: 40px; /* Space at the bottom */
+          flex-direction: column; /* Normal top-to-bottom order */
+        }
+        
+        .prize-ladder-area #prize-ladder {
+            display: flex;
+            flex-direction: column-reverse; /* Keep the 1M at the top */
+        }
+
+        .prize-item {
+          text-align: center; /* Center text on mobile */
+          font-size: 4vw;
+          padding: 8px 15px;
+        }
+
+        #question-container { font-size: 5vw; }
+        .answer-btn { font-size: 4.2vw; }
+        .logo { display: none; } /* Hide logo to save space */
+        .top-section { justify-content: center; } /* Center lifelines */
+      }
+
+      @media (max-width: 600px) {
+        #answers-container {
+            grid-template-columns: 1fr; /* Single column for answers on small phones */
+        }
+      }
+
     </style>
   </head>
 
@@ -474,17 +545,16 @@ const questions = [
         letsPlay: document.getElementById("sound-lets-play"),
         correct: document.getElementById("sound-correct"),
         wrong: document.getElementById("sound-wrong"),
-        // --- CHANGE: Suspense sound removed ---
+        suspense: document.getElementById("sound-suspense"),
       };
 
       let currentQuestionIndex = 0;
       let isAnswerLocked = false;
       let lifelines = { fiftyFifty: false, audience: false };
-
-      // --- CHANGE: New helper function to fade out any media (audio/video) ---
+      
       function fadeOutMedia(media, duration = 1500) {
         const initialVolume = media.volume;
-        if (initialVolume === 0) return; // Already silent
+        if (initialVolume === 0) return; 
 
         const steps = 50;
         const stepTime = duration / steps;
@@ -496,7 +566,6 @@ const questions = [
           } else {
             media.volume = 0;
             if (media.tagName === "AUDIO") {
-              // Only pause audio, let video finish
               media.pause();
             }
             clearInterval(fadeInterval);
@@ -516,19 +585,17 @@ const questions = [
       function playIntro() {
         allScreens.start.style.display = "none";
         allScreens.intro.style.display = "flex";
-
-        // --- CHANGE: Make intro quieter and add fade-out logic ---
-        introVideo.volume = 0.6; // Start quieter
+        
+        introVideo.volume = 0.6; 
         let introFadeStarted = false;
         introVideo.ontimeupdate = () => {
-          // Fade out in the last 2 seconds
           if (
             !introFadeStarted &&
             introVideo.duration &&
             introVideo.currentTime > introVideo.duration - 2
           ) {
             introFadeStarted = true;
-            fadeOutMedia(introVideo, 2000); // Use our new fade function
+            fadeOutMedia(introVideo, 2000);
           }
         };
 
@@ -537,7 +604,7 @@ const questions = [
           startGame();
         });
         bgMusic.play().catch((e) => {});
-        bgMusic.volume = 0; // Start bg music muted, will be faded in
+        bgMusic.volume = 0; 
       }
 
       introVideo.onended = startGame;
@@ -562,12 +629,11 @@ const questions = [
         prizeLadderContainer.innerHTML = "";
         questions
           .slice()
-          .reverse()
           .forEach((q, index) => {
             const item = document.createElement("div");
             item.classList.add("prize-item");
-            item.dataset.level = questions.length - 1 - index;
-            item.innerHTML = `<span>${questions.length - index}</span> ${q.prize}`;
+            item.dataset.level = index;
+            item.innerHTML = `<span>${index + 1}</span> ${q.prize}`;
             prizeLadderContainer.appendChild(item);
           });
       }
@@ -611,26 +677,38 @@ const questions = [
       function selectAnswer(selectedIndex, button) {
         if (isAnswerLocked) return;
         isAnswerLocked = true;
+        
+        // This was the original code that used the suspense sound.
+        // It's kept here for reference but commented out.
+        // allSounds.suspense.loop = true;
+        // playSound(allSounds.suspense);
+        // fadeOutMedia(bgMusic);
 
         document
           .querySelectorAll(".answer-btn")
           .forEach((btn) => btn.classList.add("locked"));
         button.classList.add("selected");
 
-        // --- CHANGE: Shorter delay, no suspense sound ---
         setTimeout(() => {
+          // allSounds.suspense.pause();
           const correctIndex = questions[currentQuestionIndex].correct;
+
+          // --- FIX: Remove focus from the tapped button to prevent "stuck" highlight on mobile ---
+          if (document.activeElement) {
+              document.activeElement.blur();
+          }
 
           if (selectedIndex === correctIndex) {
             button.classList.remove("selected");
             button.classList.add("correct");
             playSound(allSounds.correct);
             updatePrizeLadder(currentQuestionIndex, "won");
+            
+            // bgMusic.volume = 0.3; // Restore bg music volume
 
             setTimeout(() => {
               currentQuestionIndex++;
               if (currentQuestionIndex < questions.length) {
-                // Keep background music playing
                 loadQuestion(currentQuestionIndex);
               } else {
                 endGame(true); // Player won the whole game
@@ -641,13 +719,12 @@ const questions = [
             button.classList.add("incorrect");
             answersContainer.children[correctIndex].classList.add("correct");
             playSound(allSounds.wrong);
-
-            // --- CHANGE: Fade out music on incorrect answer ---
-            fadeOutMedia(bgMusic);
+            
+            fadeOutMedia(bgMusic); // Fade out music on incorrect answer
 
             setTimeout(() => endGame(false), 3000);
           }
-        }, 1500); // Reduced delay from 3000ms to 1500ms
+        }, 2000); // Shortened the suspense time
       }
 
       function useLifeline5050() {
@@ -672,26 +749,6 @@ const questions = [
         document.getElementById("lifeline-audience").classList.add("used");
       }
 
-      function endGame(isWinner) {
-        // --- CHANGE: Fade out music when the game ends for any reason ---
-        fadeOutMedia(bgMusic);
-
-        allScreens.game.style.display = "none";
-        allScreens.gameOver.style.display = "flex";
-
-        if (isWinner) {
-          const finalPrize = questions[questions.length - 1].prize;
-          gameOverText.textContent = `GLÜCKWUNSCH! ${finalPrize} GEWONNEN!`;
-        } else {
-          const prizeWon =
-            currentQuestionIndex > 0
-              ? questions[currentQuestionIndex - 1].prize
-              : "0 €";
-          gameOverText.textContent = `LEIDER FALSCH. Sie gehen mit ${prizeWon} nach Hause.`;
-        }
-      }
-
-      // Bonus: A more informative game-over message
       function endGame(isWinner) {
         fadeOutMedia(bgMusic);
         allScreens.game.style.display = "none";
