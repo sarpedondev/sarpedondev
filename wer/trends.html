@@ -122,10 +122,6 @@
         animation: popIn 1s ease;
       }
 
-      #start-btn:hover {
-        transform: scale(1.1);
-      }
-
       /* --- GAME LAYOUT & CENTERING --- */
       .main-game-area {
         width: 100%;
@@ -182,11 +178,6 @@
         justify-content: center;
         align-items: center;
         position: relative;
-      }
-
-      .lifeline:hover:not(.used) {
-        background: var(--accent-color);
-        color: #000;
       }
 
       .lifeline.used {
@@ -252,11 +243,6 @@
         visibility: visible;
       }
 
-      .answer-btn:hover:not(.locked) {
-        background: var(--accent-color);
-        color: #000;
-      }
-
       .answer-prefix {
         color: var(--accent-color);
         margin-right: 15px;
@@ -298,7 +284,7 @@
         display: flex;
         flex-direction: column-reverse;
         opacity: 0;
-        transition: opacity 1s ease-in;
+        transition: opacity 1s ease-in, width 0.5s ease, right 0.5s ease;
         z-index: 50;
       }
 
@@ -352,6 +338,67 @@
         color: var(--accent-color);
         text-shadow: 0 0 15px var(--accent-color);
       }
+      
+      /* --- HOVER STYLES (for mouse-enabled devices only) --- */
+      /* This prevents "sticky hover" on touch devices like iPad */
+      @media (hover: hover) {
+        #start-btn:hover {
+          transform: scale(1.1);
+        }
+
+        .lifeline:hover:not(.used) {
+          background: var(--accent-color);
+          color: #000;
+        }
+        
+        .answer-btn:hover:not(.locked) {
+          background: var(--accent-color);
+          color: #000;
+        }
+      }
+
+      /* --- RESPONSIVE ADJUSTMENTS for TABLETS & SMALLER SCREENS --- */
+      @media (max-width: 1100px) {
+        body {
+          /* Add padding on the right to make space for the prize ladder,
+             preventing it from overlapping the main content. */
+          padding-right: 180px;
+          box-sizing: border-box;
+        }
+
+        .prize-ladder-area {
+          width: 160px; /* Make the ladder narrower */
+          right: 10px;  /* Position it within the new padding area */
+          opacity: 0.95;
+        }
+
+        .prize-item {
+          font-size: 14px; /* Use a fixed font size instead of vw */
+          padding: 3px 10px;
+          margin-bottom: 2px;
+        }
+        
+        .prize-item span {
+          margin-right: 10px;
+        }
+
+        /* Adjust main content font sizes to be more stable on tablets */
+        #question-container {
+          font-size: 20px;
+          padding: 15px;
+        }
+
+        .answer-btn {
+          font-size: 16px;
+          padding: 12px;
+        }
+
+        #start-btn {
+          font-size: 28px; /* Control the start button size */
+          padding: 15px 30px;
+        }
+      }
+
     </style>
   </head>
 
