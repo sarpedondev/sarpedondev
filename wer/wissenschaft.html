@@ -1,0 +1,761 @@
+<!doctype html>
+
+<html lang="de">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Wer wird Millionär?</title>
+    <style>
+      /* --- GLOBAL STYLES & THEME --- */
+      :root {
+        --main-bg-color: #02022b;
+        --main-text-color: #ffffff;
+        --accent-color: #fca311;
+        --correct-color: #28a745;
+        --incorrect-color: #dc3545;
+        --selected-color: #ffc107;
+        --button-bg: linear-gradient(180deg, #0b0b4a 0%, #02022b 100%);
+        --button-border: #fca311;
+        --font-family: "Helvetica Neue", "Arial", sans-serif;
+        --prize-won-color: #9c711a;
+      }
+
+      /* --- KEYFRAME ANIMATIONS --- */
+      @keyframes blink-yellow {
+        0%,
+        100% {
+          background: var(--selected-color);
+          border-color: #fff;
+          color: #000;
+        }
+
+        50% {
+          background: var(--button-bg);
+          border-color: var(--button-border);
+          color: var(--main-text-color);
+        }
+      }
+
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+        }
+
+        to {
+          opacity: 1;
+        }
+      }
+
+      @keyframes popIn {
+        0% {
+          opacity: 0;
+          transform: scale(0.8) translateY(20px);
+        }
+
+        100% {
+          opacity: 1;
+          transform: scale(1) translateY(0);
+        }
+      }
+
+      body {
+        background-color: var(--main-bg-color);
+        color: var(--main-text-color);
+        font-family: var(--font-family);
+        margin: 0;
+        overflow: hidden;
+        text-align: center;
+      }
+
+      /* --- SCREEN & VIDEO CONTAINERS --- */
+      .screen {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        display: none;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        z-index: 10;
+      }
+
+      #start-screen {
+        display: flex;
+        background: var(--main-bg-color);
+        z-index: 100;
+      }
+
+      #background-video-container {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 1;
+        overflow: hidden;
+        background: var(--main-bg-color);
+      }
+
+      #intro-video,
+      #game-bg-video {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+
+      #game-bg-video {
+        opacity: 0.3;
+      }
+
+      /* --- START BUTTON --- */
+      #start-btn {
+        background: var(--accent-color);
+        border: 2px solid #fff;
+        color: #000;
+        padding: 20px 40px;
+        font-size: 3vw;
+        border-radius: 15px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        animation: popIn 1s ease;
+      }
+
+      /* --- GAME LAYOUT & CENTERING --- */
+      .main-game-area {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        opacity: 0;
+        transition: opacity 1s ease-in;
+        z-index: 20;
+      }
+
+      .main-game-area.visible {
+        opacity: 1;
+      }
+
+      .top-section {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        width: 100%;
+        max-width: 1000px;
+        margin-bottom: 20px;
+      }
+
+      .logo {
+        width: 100px;
+        height: 100px;
+        border-radius: 50%;
+        background: url("media/logo.webp") no-repeat center center;
+        background-size: contain;
+        background-color: rgba(2, 2, 43, 0.8);
+        border: 3px solid var(--accent-color);
+      }
+
+      /* --- LIFELINES --- */
+      #lifeline-container {
+        display: flex;
+        gap: 15px;
+      }
+
+      .lifeline {
+        background: var(--button-bg);
+        border: 2px solid var(--button-border);
+        width: 80px;
+        height: 60px;
+        border-radius: 10px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-size: 1.2em;
+        font-weight: bold;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        position: relative;
+      }
+
+      .lifeline.used {
+        opacity: 0.4;
+        cursor: not-allowed;
+        background: #333;
+      }
+
+      .lifeline.used::after {
+        content: "X";
+        position: absolute;
+        color: var(--incorrect-color);
+        font-size: 4em;
+        font-family: "Arial Black", sans-serif;
+        line-height: 1;
+      }
+
+      /* --- QUESTION & ANSWERS --- */
+      .qa-container {
+        width: 100%;
+        max-width: 1000px;
+      }
+
+      #question-container {
+        background: var(--button-bg);
+        border: 2px solid var(--button-border);
+        border-radius: 10px;
+        padding: 20px;
+        font-size: 2.2vw;
+        margin-bottom: 20px;
+        box-shadow: 0 0 20px rgba(252, 163, 17, 0.5);
+        min-height: 100px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        opacity: 0;
+      }
+
+      #answers-container {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 15px;
+      }
+
+      .answer-btn {
+        background: var(--button-bg);
+        border: 2px solid var(--button-border);
+        border-radius: 10px;
+        padding: 15px;
+        font-size: 1.8vw;
+        color: var(--main-text-color);
+        cursor: pointer;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        text-align: left;
+        opacity: 0;
+        visibility: hidden;
+      }
+
+      .pop-in {
+        animation: popIn 0.5s ease-out forwards;
+        visibility: visible;
+      }
+
+      .answer-prefix {
+        color: var(--accent-color);
+        margin-right: 15px;
+        font-weight: bold;
+      }
+
+      .answer-btn.selected {
+        animation: blink-yellow 0.5s infinite;
+        opacity: 1;
+      }
+
+      .answer-btn.correct,
+      .answer-btn.incorrect {
+        animation: none;
+        opacity: 1 !important;
+        visibility: visible !important;
+      }
+
+      .answer-btn.correct {
+        background: var(--correct-color) !important;
+        border-color: #fff !important;
+        color: #fff !important;
+      }
+
+      .answer-btn.incorrect {
+        background: var(--incorrect-color) !important;
+        border-color: #fff !important;
+        color: #fff !important;
+      }
+
+      /* --- PRIZE LADDER (ABSOLUTE POSITIONING) --- */
+      .prize-ladder-area {
+        position: absolute;
+        right: 2vw;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 20%;
+        max-width: 300px;
+        display: flex;
+        flex-direction: column-reverse;
+        opacity: 0;
+        transition: opacity 1s ease-in, width 0.5s ease, right 0.5s ease;
+        z-index: 50;
+      }
+
+      .prize-ladder-area.visible {
+        opacity: 1;
+      }
+
+      .prize-item {
+        font-size: 1.5vw;
+        padding: 5px 15px;
+        border-radius: 5px;
+        margin-bottom: 5px;
+        text-align: right;
+        transition: all 0.3s ease;
+        color: rgba(255, 255, 255, 0.7);
+      }
+
+      .prize-item.won {
+        color: var(--prize-won-color);
+        font-weight: bold;
+      }
+
+      .prize-item.current {
+        background-color: var(--accent-color);
+        color: #000;
+        font-weight: bold;
+        transform: scale(1.05);
+      }
+
+      .prize-item span {
+        margin-right: 15px;
+        color: rgba(255, 255, 255, 0.5);
+      }
+
+      .prize-item.current span,
+      .prize-item.won span {
+        color: inherit;
+        opacity: 0.7;
+      }
+
+      /* --- GAME OVER SCREEN --- */
+      #game-over-screen {
+        z-index: 90;
+        background: rgba(2, 2, 43, 0.95);
+        animation: popIn 0.5s ease;
+      }
+
+      .game-over-content {
+        font-size: 5vw;
+        font-weight: bold;
+        color: var(--accent-color);
+        text-shadow: 0 0 15px var(--accent-color);
+      }
+      
+      /* --- HOVER STYLES (for mouse-enabled devices only) --- */
+      /* This prevents "sticky hover" on touch devices like iPad */
+      @media (hover: hover) {
+        #start-btn:hover {
+          transform: scale(1.1);
+        }
+
+        .lifeline:hover:not(.used) {
+          background: var(--accent-color);
+          color: #000;
+        }
+        
+        .answer-btn:hover:not(.locked) {
+          background: var(--accent-color);
+          color: #000;
+        }
+      }
+
+      /* --- RESPONSIVE ADJUSTMENTS for TABLETS & SMALLER SCREENS --- */
+      @media (max-width: 1100px) {
+        body {
+          /* Add padding on the right to make space for the prize ladder,
+             preventing it from overlapping the main content. */
+          padding-right: 180px;
+          box-sizing: border-box;
+        }
+
+        .prize-ladder-area {
+          width: 160px; /* Make the ladder narrower */
+          right: 10px;  /* Position it within the new padding area */
+          opacity: 0.95;
+        }
+
+        .prize-item {
+          font-size: 14px; /* Use a fixed font size instead of vw */
+          padding: 3px 10px;
+          margin-bottom: 2px;
+        }
+        
+        .prize-item span {
+          margin-right: 10px;
+        }
+
+        /* Adjust main content font sizes to be more stable on tablets */
+        #question-container {
+          font-size: 20px;
+          padding: 15px;
+        }
+
+        .answer-btn {
+          font-size: 16px;
+          padding: 12px;
+        }
+
+        #start-btn {
+          font-size: 28px; /* Control the start button size */
+          padding: 15px 30px;
+        }
+      }
+
+    </style>
+  </head>
+
+  <body>
+    <audio id="bg-music" loop>
+      <source src="media/background.mp3" type="audio/mpeg" />
+    </audio>
+    <audio id="sound-lets-play">
+      <source src="media/lets-play.mp3" type="audio/mpeg" />
+    </audio>
+    <audio id="sound-correct">
+      <source src="media/correct.mp3" type="audio/mpeg" />
+    </audio>
+    <audio id="sound-wrong">
+      <source src="media/wrong.mp3" type="audio/mpeg" />
+    </audio>
+    <audio id="sound-suspense">
+      <source src="media/final-answer.mp3" type="audio/mpeg" />
+    </audio>
+
+    <div id="background-video-container">
+      <video muted loop id="game-bg-video">
+        <source src="media/game-bg.mp4" type="video/mp4" />
+      </video>
+    </div>
+
+    <div id="start-screen" class="screen">
+      <button id="start-btn">Starten</button>
+    </div>
+    <div id="intro-screen" class="screen">
+      <video id="intro-video">
+        <source src="media/intro.mp4" type="video/mp4" />
+      </video>
+    </div>
+    <div id="game-screen" class="screen">
+      <div class="main-game-area" id="main-game-area">
+        <div class="top-section">
+          <div class="logo"></div>
+          <div id="lifeline-container">
+            <div class="lifeline" id="lifeline-5050">50:50</div>
+            <div class="lifeline" id="lifeline-audience">Publikum</div>
+          </div>
+        </div>
+        <div class="qa-container">
+          <div id="question-container"><span id="question-text"></span></div>
+          <div id="answers-container"></div>
+        </div>
+      </div>
+      <div class="prize-ladder-area" id="prize-ladder-area">
+        <div id="prize-ladder"></div>
+      </div>
+    </div>
+    <div id="game-over-screen" class="screen">
+      <div class="game-over-content">
+        <p id="game-over-text"></p>
+      </div>
+    </div>
+    <script>
+      // === DEINE FRAGEN HIER EINTRAGEN ===
+const questions = [
+  {
+    question:
+      "..., was überraschte sie?",
+    answers: ["Das Genom bildet kategorisiert eine geometrische Form", "Der Mensch hat Gene vom Neandertaler", "Der Mensch hat weniger Gene als Mais", "Nur 5% des genetischen Codes sind individuell"],
+    correct: 2,
+    prize: "100 €",
+  },
+  {
+    question:
+      "..., was verblüffte sie?",
+    answers: ["Dass es viel weniger Galaxien gibt als erwartet", "Ein gewisser Anteil aller Teilchen verschwindet jedes Jahr", "Die Erde tauchte nicht auf den Messungen auf", "Der Großteil des Universums besteht aus einer unbekannten Energie"],
+    correct: 3,
+    prize: "500 €",
+  },
+  {
+    question:
+      "..., was wurde beobachtet?",
+    answers: ["Plastik zersetzt sich im Meer zu unmöglichen Größen", "Oktopuse leben in der Titanic", "Hohe Strahlung ließ Fische mutieren", "Der Mariangraben hat eine 3cm Plastikschicht"],
+    correct: 0,
+    prize: "1.000 €",
+  },
+  {
+    question:
+      "..., was schockierte sie?",
+    answers: ["3G-Wellen lösten Teile des Gehirns auf", "Das Calcium in den Knochen löst sich auf", "Jeder zweite Patient weißt kritische Mengen Strontium-90 auf", "Superresistente Bakterien bedrohen uns ins Mittelalter zu verstezten"],
+    correct: 3,
+    prize: "5.000 €",
+  },
+  {
+    question:
+      "..., was gelang ihnen?",
+    answers: ["Ein Quantenteilchen reiste schneller als das Licht", "Mit genug Energie lässt sich Materie klonen", "Quanten können über Kilometer manipuliert werden", "Speisen können mit einem Quantenlaser innerhalb einer Sekunde erhitzt werden"],
+    correct: 2,
+    prize: "10.000 €",
+  },
+];
+
+      const allScreens = {
+        start: document.getElementById("start-screen"),
+        intro: document.getElementById("intro-screen"),
+        game: document.getElementById("game-screen"),
+        gameOver: document.getElementById("game-over-screen"),
+      };
+      const mainGameArea = document.getElementById("main-game-area");
+      const prizeLadderArea = document.getElementById("prize-ladder-area");
+      const introVideo = document.getElementById("intro-video");
+      const bgVideo = document.getElementById("game-bg-video");
+      const questionText = document.getElementById("question-text");
+      const answersContainer = document.getElementById("answers-container");
+      const prizeLadderContainer = document.getElementById("prize-ladder");
+      const gameOverText = document.getElementById("game-over-text");
+
+      document.getElementById("start-btn").onclick = playIntro;
+      document.getElementById("lifeline-5050").onclick = useLifeline5050;
+      document.getElementById("lifeline-audience").onclick =
+        useLifelineAudience;
+
+      const bgMusic = document.getElementById("bg-music");
+      const allSounds = {
+        letsPlay: document.getElementById("sound-lets-play"),
+        correct: document.getElementById("sound-correct"),
+        wrong: document.getElementById("sound-wrong"),
+        // --- CHANGE: Suspense sound removed ---
+      };
+
+      let currentQuestionIndex = 0;
+      let isAnswerLocked = false;
+      let lifelines = { fiftyFifty: false, audience: false };
+
+      // --- CHANGE: New helper function to fade out any media (audio/video) ---
+      function fadeOutMedia(media, duration = 1500) {
+        const initialVolume = media.volume;
+        if (initialVolume === 0) return; // Already silent
+
+        const steps = 50;
+        const stepTime = duration / steps;
+        const volumeStep = initialVolume / steps;
+
+        let fadeInterval = setInterval(() => {
+          if (media.volume > volumeStep) {
+            media.volume -= volumeStep;
+          } else {
+            media.volume = 0;
+            if (media.tagName === "AUDIO") {
+              // Only pause audio, let video finish
+              media.pause();
+            }
+            clearInterval(fadeInterval);
+          }
+        }, stepTime);
+      }
+
+      function playSound(sound) {
+        if (sound) {
+          sound.currentTime = 0;
+          sound
+            .play()
+            .catch((e) => console.error(`${sound.id} failed to play:`, e));
+        }
+      }
+
+      function playIntro() {
+        allScreens.start.style.display = "none";
+        allScreens.intro.style.display = "flex";
+
+        // --- CHANGE: Make intro quieter and add fade-out logic ---
+        introVideo.volume = 0.6; // Start quieter
+        let introFadeStarted = false;
+        introVideo.ontimeupdate = () => {
+          // Fade out in the last 2 seconds
+          if (
+            !introFadeStarted &&
+            introVideo.duration &&
+            introVideo.currentTime > introVideo.duration - 2
+          ) {
+            introFadeStarted = true;
+            fadeOutMedia(introVideo, 2000); // Use our new fade function
+          }
+        };
+
+        introVideo.play().catch((e) => {
+          console.error("Intro video failed to play:", e);
+          startGame();
+        });
+        bgMusic.play().catch((e) => {});
+        bgMusic.volume = 0; // Start bg music muted, will be faded in
+      }
+
+      introVideo.onended = startGame;
+
+      function startGame() {
+        allScreens.intro.style.display = "none";
+        allScreens.game.style.display = "flex";
+        bgVideo.play().catch((e) => {});
+        setTimeout(() => {
+          mainGameArea.classList.add("visible");
+          prizeLadderArea.classList.add("visible");
+        }, 100);
+
+        bgMusic.volume = 0.3;
+        playSound(allSounds.letsPlay);
+
+        buildPrizeLadder();
+        loadQuestion(currentQuestionIndex);
+      }
+
+      function buildPrizeLadder() {
+        prizeLadderContainer.innerHTML = "";
+        questions
+          .slice()
+          .reverse()
+          .forEach((q, index) => {
+            const item = document.createElement("div");
+            item.classList.add("prize-item");
+            item.dataset.level = questions.length - 1 - index;
+            item.innerHTML = `<span>${questions.length - index}</span> ${q.prize}`;
+            prizeLadderContainer.appendChild(item);
+          });
+      }
+
+      function updatePrizeLadder(level, status = "current") {
+        document.querySelectorAll(".prize-item").forEach((item) => {
+          const itemLevel = parseInt(item.dataset.level);
+          item.classList.remove("current", "won");
+          if (itemLevel < level) item.classList.add("won");
+          else if (itemLevel === level && status === "current")
+            item.classList.add("current");
+        });
+      }
+
+      function loadQuestion(index) {
+        isAnswerLocked = false;
+        const currentQuestion = questions[index];
+
+        questionText.parentElement.classList.remove("pop-in");
+        questionText.parentElement.style.opacity = 0;
+        setTimeout(() => {
+          questionText.textContent = currentQuestion.question;
+          questionText.parentElement.classList.add("pop-in");
+        }, 300);
+
+        answersContainer.innerHTML = "";
+        updatePrizeLadder(index);
+
+        const prefixes = ["A:", "B:", "C:", "D:"];
+        currentQuestion.answers.forEach((answer, i) => {
+          const button = document.createElement("button");
+          button.className = "answer-btn";
+          button.innerHTML = `<span class="answer-prefix">${prefixes[i]}</span> <span class="answer-text">${answer}</span>`;
+          button.onclick = () => selectAnswer(i, button);
+          button.style.animationDelay = `${500 + i * 150}ms`;
+          button.classList.add("pop-in");
+          answersContainer.appendChild(button);
+        });
+      }
+
+      function selectAnswer(selectedIndex, button) {
+        if (isAnswerLocked) return;
+        isAnswerLocked = true;
+
+        document
+          .querySelectorAll(".answer-btn")
+          .forEach((btn) => btn.classList.add("locked"));
+        button.classList.add("selected");
+
+        // --- CHANGE: Shorter delay, no suspense sound ---
+        setTimeout(() => {
+          const correctIndex = questions[currentQuestionIndex].correct;
+
+          if (selectedIndex === correctIndex) {
+            button.classList.remove("selected");
+            button.classList.add("correct");
+            playSound(allSounds.correct);
+            updatePrizeLadder(currentQuestionIndex, "won");
+
+            setTimeout(() => {
+              currentQuestionIndex++;
+              if (currentQuestionIndex < questions.length) {
+                // Keep background music playing
+                loadQuestion(currentQuestionIndex);
+              } else {
+                endGame(true); // Player won the whole game
+              }
+            }, 2500);
+          } else {
+            button.classList.remove("selected");
+            button.classList.add("incorrect");
+            answersContainer.children[correctIndex].classList.add("correct");
+            playSound(allSounds.wrong);
+
+            // --- CHANGE: Fade out music on incorrect answer ---
+            fadeOutMedia(bgMusic);
+
+            setTimeout(() => endGame(false), 3000);
+          }
+        }, 1500); // Reduced delay from 3000ms to 1500ms
+      }
+
+      function useLifeline5050() {
+        if (lifelines.fiftyFifty || isAnswerLocked) return;
+        lifelines.fiftyFifty = true;
+        document.getElementById("lifeline-5050").classList.add("used");
+
+        const correctIndex = questions[currentQuestionIndex].correct;
+        let incorrectIndices = [0, 1, 2, 3].filter((i) => i !== correctIndex);
+        incorrectIndices.splice(
+          Math.floor(Math.random() * incorrectIndices.length),
+          1,
+        );
+        incorrectIndices.forEach((index) => {
+          answersContainer.children[index].style.visibility = "hidden";
+        });
+      }
+
+      function useLifelineAudience() {
+        if (lifelines.audience || isAnswerLocked) return;
+        lifelines.audience = true;
+        document.getElementById("lifeline-audience").classList.add("used");
+      }
+
+      function endGame(isWinner) {
+        // --- CHANGE: Fade out music when the game ends for any reason ---
+        fadeOutMedia(bgMusic);
+
+        allScreens.game.style.display = "none";
+        allScreens.gameOver.style.display = "flex";
+
+        if (isWinner) {
+          const finalPrize = questions[questions.length - 1].prize;
+          gameOverText.textContent = `GLÜCKWUNSCH! ${finalPrize} GEWONNEN!`;
+        } else {
+          const prizeWon =
+            currentQuestionIndex > 0
+              ? questions[currentQuestionIndex - 1].prize
+              : "0 €";
+          gameOverText.textContent = `LEIDER FALSCH. Sie gehen mit ${prizeWon} nach Hause.`;
+        }
+      }
+
+      // Bonus: A more informative game-over message
+      function endGame(isWinner) {
+        fadeOutMedia(bgMusic);
+        allScreens.game.style.display = "none";
+        allScreens.gameOver.style.display = "flex";
+
+        if (isWinner) {
+          const finalPrize = questions[questions.length - 1].prize;
+          gameOverText.textContent = `GLÜCKWUNSCH! ${finalPrize} GEWONNEN!`;
+        } else {
+          // Check if they won any money before the incorrect answer
+          const prizeWon =
+            currentQuestionIndex > 0
+              ? questions[currentQuestionIndex - 1].prize
+              : "0 €";
+          gameOverText.textContent = `LEIDER FALSCH. Sie gehen mit ${prizeWon} nach Hause.`;
+        }
+      }
+    </script>
+  </body>
+</html>
