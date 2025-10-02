@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>30-Minuten-Lauf Tracker (Profi-Sortierung)</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-100 text-slate-800 flex items-center justify-center min-h-screen p-4">
+
+    <div class="container bg-white w-full max-w-3xl mx-auto p-6 rounded-lg shadow-lg">
+        <div id="stopwatch" class="text-6xl font-bold text-center text-slate-700 mb-4 font-mono">30:00</div>
+        <div class="controls flex justify-center gap-4 mb-6">
+            <button id="startStopBtn" class="px-6 py-2 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-75 disabled:bg-slate-400 disabled:cursor-not-allowed">Start</button>
+            <button id="resetBtn" class="px-6 py-2 bg-slate-600 text-white font-semibold rounded-lg shadow-md hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-opacity-75">Reset</button>
+        </div>
+
+        <div class="add-student-form flex gap-2 mb-6">
+            <input type="text" id="studentNameInput" placeholder="Schülername eingeben" class="flex-grow p-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-slate-200">
+            <button id="addStudentBtn" class="px-5 py-2 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 disabled:bg-slate-400 disabled:cursor-not-allowed">Hinzufügen</button>
+        </div>
+
+        <ul id="student-list" class="space-y-3"></ul>
+    </div>
+
+    <script>
+        const DURATION = 30 * 60;
+        let timer;
+        let timeLeft = DURATION;
+        let isRunning = false;
+        let students = [];
+
+        // DOM Elements
+        const stopwatchDisplay = document.getElementById('stopwatch');
+        const startStopBtn = document.getElementById('startStopBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        const addStudentBtn = document.getElementById('addStudentBtn');
+        const studentNameInput = document.getElementById('studentNameInput');
+        const studentList = document.getElementById('student-list');
+
+        // --- Time & Formatting ---
+        function formatTime(totalSeconds) {
+            if (totalSeconds < 0) totalSeconds = 0;
+            const mins = Math.floor(totalSeconds / 60);
+            const secs = totalSeconds % 60;
+            return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+        }
+
+        // --- Core Timer Logic ---
+        function updateStopwatch() {
+            stopwatchDisplay.textContent = formatTime(timeLeft);
+            if (timeLeft <= 0) {
+                clearInterval(timer);
+                isRunning = false;
+                startStopBtn.textContent = 'Fertig';
+                startStopBtn.disabled = true;
+                renderStudents(); 
+            } else {
+                timeLeft--;
+            }
+        }
+
+        function startStop() {
+            if (isRunning) {
+                clearInterval(timer);
+                isRunning = false;
+                startStopBtn.textContent = 'Weiter';
+            } else {
+                isRunning = true;
+                if (!timer) { // Start interval only once
+                    timer = setInterval(updateStopwatch, 1000);
+                }
+                startStopBtn.textContent = 'Stop';
+                toggleAddStudentForm(false);
+            }
+            renderStudents();
+        }
+
+        function reset() {
+            clearInterval(timer);
+            timer = null; // Important to reset the interval variable
+            isRunning = false;
+            timeLeft = DURATION;
+            updateStopwatch();
+            startStopBtn.textContent = 'Start';
+            startStopBtn.disabled = false;
+            toggleAddStudentForm(true);
+            students.forEach(s => {
+                s.laps = 0;
+                s.lapData = [];
+                s.lastLapFinishTime = 0;
+                s.predictedNextLap = Infinity;
+            });
+            renderStudents();
+        }
+
+        // --- Student Management ---
+        function addStudent() {
+            const name = studentNameInput.value.trim();
+            if (name) {
+                students.push({
+                    id: Date.now(),
+                    name,
+                    laps: 0,
+                    lapData: [], 
+                    lastLapFinishTime: 0,
+                    predictedNextLap: Infinity // Default to Infinity to place at bottom
+                });
+                studentNameInput.value = '';
+                renderStudents();
+            }
+        }
+        
+        function removeStudent(id) {
+            students = students.filter(s => s.id !== id);
+            renderStudents();
+        }
+
+        function incrementLap(id) {
+            const student = students.find(s => s.id === id);
+            if (!student || !isRunning) return;
+
+            const elapsedTime = DURATION - timeLeft;
+            const lapDuration = elapsedTime - student.lastLapFinishTime;
+
+            student.laps++;
+            student.lapData.push({ timestamp: elapsedTime, duration: lapDuration });
+            student.lastLapFinishTime = elapsedTime;
+            
+            const avgLapTime = student.lastLapFinishTime / student.laps;
+            student.predictedNextLap = student.lastLapFinishTime + avgLapTime;
+
+            renderStudents();
+        }
+
+        function toggleAddStudentForm(enabled) {
+            studentNameInput.disabled = !enabled;
+            addStudentBtn.disabled = !enabled;
+        }
+
+        // --- Sorting Logic (The new brain) ---
+        function sortStudents() {
+            const currentTime = DURATION - timeLeft;
+
+            students.sort((a, b) => {
+                // Assign a huge penalty to students with 0 laps to push them down
+                const aHasLaps = a.laps > 0;
+                const bHasLaps = b.laps > 0;
+
+                if (aHasLaps && !bHasLaps) return -1;
+                if (!aHasLaps && bHasLaps) return 1;
+                if (!aHasLaps && !bHasLaps) return a.name.localeCompare(b.name); // Sort by name if both have 0 laps
+
+                // Main sorting for runners with laps
+                const aIsOverdue = a.predictedNextLap < currentTime;
+                const bIsOverdue = b.predictedNextLap < currentTime;
+
+                // If one is overdue and the other isn't, the overdue one comes first
+                if (aIsOverdue && !bIsOverdue) return -1;
+                if (!aIsOverdue && bIsOverdue) return 1;
+
+                // If both are overdue or both are not, sort by their predicted time
+                // The one with the earlier prediction comes first
+                if (a.predictedNextLap !== b.predictedNextLap) {
+                    return a.predictedNextLap - b.predictedNextLap;
+                }
+
+                // As a final tie-breaker, the one with more laps is higher
+                return b.laps - a.laps;
+            });
+        }
+
+        // --- Rendering & UI ---
+        function toggleDetails(detailsId) {
+            const detailsEl = document.getElementById(detailsId);
+            const button = detailsEl.previousElementSibling.querySelector('.details-btn');
+            detailsEl.classList.toggle('hidden');
+            if (detailsEl.classList.contains('hidden')) {
+                button.textContent = 'Details anzeigen';
+            } else {
+                button.textContent = 'Details ausblenden';
+            }
+        }
+
+        function renderStudents() {
+            sortStudents(); // Always sort before rendering
+            const currentTime = DURATION - timeLeft;
+
+            studentList.innerHTML = '';
+            students.forEach(student => {
+                const detailsId = `details-${student.id}`;
+                const li = document.createElement('li');
+                
+                // VISUAL CUE: Add a yellow border if the student is overdue
+                const isOverdue = student.laps > 0 && student.predictedNextLap < currentTime;
+                const overdueClass = isOverdue ? 'border-l-4 border-yellow-400' : 'border-l-4 border-transparent';
+                
+                li.className = `bg-slate-50 p-4 rounded-lg border border-slate-200 transition-all ${overdueClass}`;
+
+                const detailsContent = student.lapData.length > 0
+                    ? `<p class="font-semibold mb-2">Rundenzeiten:</p>
+                       <ol class="list-decimal list-inside space-y-1 text-sm">
+                         ${student.lapData.map((data, index) =>
+                           `<li>Runde ${index + 1} bei <strong>${formatTime(data.timestamp)}</strong> (Dauer: ${formatTime(data.duration)})</li>`
+                         ).join('')}
+                       </ol>`
+                    : '<p class="text-sm text-slate-500">Noch keine Runden erfasst.</p>';
+
+                li.innerHTML = `
+                    <div class="student-main flex flex-wrap justify-between items-center gap-4">
+                        <div class="student-info flex items-center gap-4">
+                            <span class="font-bold text-lg">${student.name}</span>
+                            <div class="flex items-center gap-2">
+                               <span class="lap-count text-sm font-semibold bg-slate-200 px-2 py-1 rounded-md">Runden: ${student.laps}</span>
+                               <span class="distance text-sm text-slate-600">(${student.laps * 400}m)</span>
+                            </div>
+                        </div>
+                        <div class="student-actions flex items-center gap-2 flex-shrink-0">
+                            <button class="lap-btn px-3 py-1 bg-green-500 text-white text-sm font-semibold rounded-md hover:bg-green-600 disabled:bg-slate-400 disabled:cursor-not-allowed" onclick="incrementLap(${student.id})" ${!isRunning ? 'disabled' : ''}>+ Runde</button>
+                            <button class="details-btn px-3 py-1 bg-gray-500 text-white text-sm font-semibold rounded-md hover:bg-gray-600" onclick="toggleDetails('${detailsId}')">Details anzeigen</button>
+                            <button class="remove-btn px-3 py-1 bg-red-500 text-white text-sm font-semibold rounded-md hover:bg-red-600" onclick="removeStudent(${student.id})">Entfernen</button>
+                        </div>
+                    </div>
+                    <div class="student-details hidden mt-4 pt-4 border-t border-slate-200" id="${detailsId}">${detailsContent}</div>
+                `;
+                studentList.appendChild(li);
+            });
+        }
+
+        // --- Initial Setup ---
+        startStopBtn.addEventListener('click', startStop);
+        resetBtn.addEventListener('click', reset);
+        addStudentBtn.addEventListener('click', addStudent);
+        studentNameInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') addStudent(); });
+
+        updateStopwatch(); // Initial display
+    </script>
+
+</body>
+</html>
