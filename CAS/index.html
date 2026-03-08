@@ -10,7 +10,6 @@
   <!-- PWA & iOS Meta Tags -->
   <link rel="manifest" href="manifest.json" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
-  <!-- Use black-translucent so the app goes fully edge-to-edge on iPad -->
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="CAS App" />
   <link rel="apple-touch-icon" href="icons/apple-icon-180.png" />
@@ -42,80 +41,253 @@
 </head>
 
 <body class="h-screen flex flex-col overflow-hidden bg-[#D4D4DB] select-none antialiased text-slate-900 font-sans">
-  <!-- 1. Top Bar (Green) - Taller for bigger icons -->
+  <!-- =============================== -->
+  <!-- MAIN UI APP FRAME               -->
+  <!-- =============================== -->
+
+  <!-- 1. Top Bar -->
   <div class="h-[52px] bg-[#31B222] flex justify-between items-center px-4 shrink-0">
-    <!-- Left Nav Actions -->
     <div class="flex items-center gap-6 text-white">
-      <!-- Back / Exit -->
-      <div class="flex items-center gap-1 cursor-pointer hover:opacity-75">
+      <div id="btn-exit" class="flex items-center gap-1 cursor-pointer hover:opacity-75 transition-opacity">
         <img src="icons/chevron-left.svg" alt="Back" class="w-[24px] h-[24px]" />
         <span class="text-[17px] font-medium tracking-tight">Exit</span>
       </div>
-
-      <!-- Top Left Icons -->
-      <img src="icons/plus.svg" alt="Add" class="w-[26px] h-[26px] cursor-pointer hover:opacity-75" />
-      <img src="icons/undo.svg" alt="Undo" class="w-[26px] h-[26px] cursor-pointer hover:opacity-75" />
-      <img src="icons/redo.svg" alt="Redo" class="w-[26px] h-[26px] cursor-pointer hover:opacity-75" />
-      <img src="icons/broom.svg" alt="Clear" class="w-[24px] h-[24px] cursor-pointer hover:opacity-75" />
+      <img src="icons/plus.svg" alt="Add"
+        class="w-[26px] h-[26px] cursor-pointer hover:opacity-75 transition-opacity" />
+      <img src="icons/undo.svg" alt="Undo"
+        class="w-[26px] h-[26px] cursor-pointer hover:opacity-75 transition-opacity" />
+      <img src="icons/redo.svg" alt="Redo"
+        class="w-[26px] h-[26px] cursor-pointer hover:opacity-75 transition-opacity" />
+      <img src="icons/broom.svg" alt="Clear"
+        class="w-[24px] h-[24px] cursor-pointer hover:opacity-75 transition-opacity" />
     </div>
-
-    <!-- Right Nav Status & Icons -->
     <div class="flex items-center gap-5 text-white">
-      <!-- Text Elements -->
       <span class="text-[14px] font-medium tracking-wide">CAS</span>
       <span class="text-[14px] font-medium tracking-wide">Code: 0000-0000</span>
       <span class="text-[14px] font-medium tracking-wide">00:37</span>
-
-      <!-- Top Right Icons -->
-      <img src="icons/info.svg" alt="Info" class="w-[24px] h-[24px] cursor-pointer hover:opacity-75" />
-      <img src="icons/gear.svg" alt="Settings" class="w-[24px] h-[24px] cursor-pointer hover:opacity-75" />
+      <img src="icons/info.svg" alt="Info"
+        class="w-[24px] h-[24px] cursor-pointer hover:opacity-75 transition-opacity" />
+      <img src="icons/gear.svg" alt="Settings"
+        class="w-[24px] h-[24px] cursor-pointer hover:opacity-75 transition-opacity" />
     </div>
   </div>
 
-  <!-- 2. Sub Toolbar (Gray) -->
+  <!-- 2. Sub Toolbar -->
   <div class="h-[46px] bg-[#8E8E98] flex items-center border-b border-[#7C7C8A] shrink-0">
-    <!-- 1.1 Tab (Wider: 60px) -->
     <div
       class="w-[60px] h-full bg-[#ABABBA] text-[#F9F9F9] flex items-center justify-center text-[15px] font-medium border-r border-[#7C7C8A]">
       1.1
     </div>
-
-    <!-- Sub-Toolbar Icons -->
     <div class="flex gap-7 pl-6">
-      <img src="icons/wrench.svg" alt="Tools" class="w-[22px] h-[22px] cursor-pointer hover:opacity-75" />
-      <img src="icons/sliders.svg" alt="Properties" class="w-[22px] h-[22px] cursor-pointer hover:opacity-75" />
+      <img src="icons/wrench.svg" alt="Tools"
+        class="w-[22px] h-[22px] cursor-pointer hover:opacity-75 transition-opacity" />
+      <img src="icons/sliders.svg" alt="Properties"
+        class="w-[22px] h-[22px] cursor-pointer hover:opacity-75 transition-opacity" />
     </div>
   </div>
 
-  <!-- 3. App Body (Sidebar + Paper) -->
+  <!-- 3. Workspace -->
   <div class="flex flex-1 overflow-hidden">
-    <!-- Left Sidebar (Wider: 50px, perfectly centered) -->
-    <!-- Using flex-col, items-center to strictly center contents horizontally -->
     <div class="w-[50px] bg-[#D4D4DB] flex flex-col items-center pt-5 gap-7 shrink-0">
       <div class="text-[12px] text-[#555] font-semibold tracking-wider text-center w-full">
         DEG
       </div>
-
-      <!-- Sidebar Icons -->
-      <img src="icons/split-view.svg" alt="Split View" class="w-[26px] h-[26px] cursor-pointer hover:opacity-75" />
-      <img src="icons/book.svg" alt="Catalog" class="w-[26px] h-[26px] cursor-pointer hover:opacity-75" />
+      <img src="icons/split-view.svg" alt="Split View"
+        class="w-[26px] h-[26px] cursor-pointer hover:opacity-75 transition-opacity" />
+      <img src="icons/book.svg" alt="Catalog"
+        class="w-[26px] h-[26px] cursor-pointer hover:opacity-75 transition-opacity" />
     </div>
-
-    <!-- Empty 10px gray gap (50px + 10px = 60px. Perfectly aligns with tab above) -->
     <div class="w-[10px] bg-[#D4D4DB] shrink-0"></div>
-
-    <!-- Right Workspace Area (White Paper) -->
     <div
       class="flex-1 bg-[#FDFDFD] border-l border-[#C2C2CA] shadow-[-3px_0_12px_rgba(0,0,0,0.04)] p-6 cursor-text relative">
       <span class="font-mono text-[24px] font-light text-black animate-blink absolute top-4 left-6">|</span>
     </div>
   </div>
 
-  <!-- PWA Service Worker Registration -->
+  <!-- =============================== -->
+  <!-- NATIVE iOS ALERT MODAL          -->
+  <!-- =============================== -->
+
+  <div id="ios-alert-overlay"
+    class="fixed inset-0 z-[50] flex items-center justify-center bg-black/40 opacity-0 pointer-events-none transition-opacity duration-[250ms] ease-out">
+    <div id="ios-alert-box"
+      class="w-[270px] bg-white/85 backdrop-blur-xl rounded-[14px] flex flex-col overflow-hidden scale-[1.15] transition-transform duration-[250ms] ease-out shadow-2xl">
+      <div class="px-4 pt-[18px] pb-[16px] flex flex-col items-center text-center">
+        <span class="text-[17px] font-semibold tracking-tight text-black">Exit Test Mode</span>
+        <span class="text-[13px] leading-[17px] text-black mt-[6px]">
+          TI-Nspire will exit Test Mode and Self-Lock will end. Content
+          created in Test Mode will not be available after exiting.<br /><br />Do
+          you want to exit Test Mode?
+        </span>
+      </div>
+      <div class="flex border-t border-black/10 h-[44px]">
+        <button id="btn-alert-no"
+          class="flex-1 flex items-center justify-center text-[17px] tracking-tight text-[#007AFF] hover:bg-black/5 active:bg-black/10 border-r border-black/10 transition-colors">
+          No
+        </button>
+        <button id="btn-alert-yes"
+          class="flex-1 flex items-center justify-center text-[17px] tracking-tight font-semibold text-[#007AFF] hover:bg-black/5 active:bg-black/10 transition-colors">
+          Yes
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- =============================== -->
+  <!-- TEST MODE SUMMARY MODAL         -->
+  <!-- =============================== -->
+
+  <div id="summary-overlay"
+    class="fixed inset-0 z-[60] flex items-center justify-center bg-black/40 opacity-0 pointer-events-none transition-opacity duration-[300ms] ease-out">
+    <!-- Modal Box: Slides up and fades in -->
+    <div id="summary-box"
+      class="w-[540px] max-w-[90%] bg-white rounded-[14px] flex flex-col overflow-hidden transform translate-y-8 scale-[0.98] transition-all duration-[300ms] ease-out shadow-2xl relative">
+      <!-- Header -->
+      <div class="h-[50px] flex items-center px-4 border-b border-gray-300 relative bg-white z-10 shrink-0">
+        <div class="absolute left-1/2 transform -translate-x-1/2 font-semibold text-[17px] text-black">
+          Test Mode Summary
+        </div>
+        <button id="btn-summary-done"
+          class="ml-auto text-[17px] text-[#007AFF] font-medium hover:opacity-75 transition-opacity">
+          Done
+        </button>
+      </div>
+
+      <!-- Content Area with Background PNG -->
+      <!-- Replace 'background.png' with your actual image path -->
+      <div class="p-6 h-[580px] overflow-y-auto bg-white bg-center bg-cover bg-no-repeat relative z-0"
+        style="background-image: url(&quot;background.png&quot;)">
+        <p class="text-[17px] text-black leading-tight mb-8 pr-4">
+          Show this screen to your teacher. A screen capture has also been
+          saved to your iPad Photos.
+        </p>
+
+        <div class="flex flex-col gap-5">
+          <div>
+            <div class="text-[11px] text-[#888] tracking-wide uppercase mb-1">
+              Test Code:
+            </div>
+            <div class="text-[24px] text-black leading-none">0000-0000</div>
+            <div class="text-[16px] text-[#007AFF] mt-[6px]">
+              CAS Mode: On
+            </div>
+          </div>
+
+          <div>
+            <div class="text-[11px] text-[#888] tracking-wide uppercase mb-[6px]">
+              Date:
+            </div>
+            <div class="text-[24px] text-black leading-none">
+              67. Mar 2026
+            </div>
+          </div>
+
+          <div>
+            <div class="text-[11px] text-[#888] tracking-wide uppercase mb-[6px]">
+              Time in Test Mode:
+            </div>
+            <div class="text-[24px] text-black leading-none">67:67</div>
+          </div>
+
+          <div>
+            <div class="text-[11px] text-[#888] tracking-wide uppercase mb-[6px]">
+              Start Time:
+            </div>
+            <div class="text-[24px] text-black leading-none">67:67</div>
+          </div>
+
+          <div>
+            <div class="text-[11px] text-[#888] tracking-wide uppercase mb-[6px]">
+              End Time:
+            </div>
+            <div class="text-[24px] text-black leading-none">16:20</div>
+          </div>
+
+          <div>
+            <div class="text-[11px] text-[#888] tracking-wide uppercase mb-[6px]">
+              Session ID:
+            </div>
+            <div class="text-[24px] text-black leading-none">
+              HEINO_GOONER
+            </div>
+          </div>
+
+          <div>
+            <div class="text-[11px] text-[#888] tracking-wide uppercase mb-[6px]">
+              Version:
+            </div>
+            <div class="text-[24px] text-black leading-none">6.3.0</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- =============================== -->
+  <!-- JAVASCRIPT LOGIC                -->
+  <!-- =============================== -->
+
   <script>
+    // Elements - Alert
+    const btnExit = document.getElementById("btn-exit");
+    const alertOverlay = document.getElementById("ios-alert-overlay");
+    const alertBox = document.getElementById("ios-alert-box");
+    const btnAlertNo = document.getElementById("btn-alert-no");
+    const btnAlertYes = document.getElementById("btn-alert-yes");
+
+    // Elements - Summary
+    const summaryOverlay = document.getElementById("summary-overlay");
+    const summaryBox = document.getElementById("summary-box");
+    const btnSummaryDone = document.getElementById("btn-summary-done");
+
+    // --- Alert Functions ---
+    function showAlert() {
+      alertOverlay.classList.remove("pointer-events-none");
+      void alertOverlay.offsetWidth;
+      alertOverlay.classList.remove("opacity-0");
+      alertBox.classList.remove("scale-[1.15]");
+      alertBox.classList.add("scale-100");
+    }
+
+    function hideAlert() {
+      alertOverlay.classList.add("opacity-0");
+      alertBox.classList.remove("scale-100");
+      alertBox.classList.add("scale-[1.15]");
+      alertOverlay.classList.add("pointer-events-none");
+    }
+
+    // --- Summary Modal Functions ---
+    function showSummary() {
+      summaryOverlay.classList.remove("pointer-events-none");
+      void summaryOverlay.offsetWidth;
+      summaryOverlay.classList.remove("opacity-0");
+      summaryBox.classList.remove("translate-y-8", "scale-[0.98]");
+      summaryBox.classList.add("translate-y-0", "scale-100");
+    }
+
+    function hideSummary() {
+      summaryOverlay.classList.add("opacity-0");
+      summaryBox.classList.remove("translate-y-0", "scale-100");
+      summaryBox.classList.add("translate-y-8", "scale-[0.98]");
+      summaryOverlay.classList.add("pointer-events-none");
+    }
+
+    // --- Event Listeners ---
+    btnExit.addEventListener("click", showAlert);
+    btnAlertNo.addEventListener("click", hideAlert);
+
+    // Clicking "Yes" closes alert, waits 250ms, then opens the Summary Modal
+    btnAlertYes.addEventListener("click", () => {
+      hideAlert();
+      setTimeout(showSummary, 250);
+    });
+
+    btnSummaryDone.addEventListener("click", hideSummary);
+
+    // PWA Service Worker Registration
     if ("serviceWorker" in navigator) {
       window.addEventListener("load", () => {
-        navigator.serviceWorker.register("./sw.js");
+        navigator.serviceWorker.register("./sw.js").catch(() => { });
       });
     }
   </script>
