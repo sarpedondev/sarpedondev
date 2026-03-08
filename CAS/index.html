@@ -1,296 +1,339 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport"
-    content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>TI-Nspire CAS Clone</title>
 
   <!-- PWA & iOS Meta Tags -->
-  <link rel="manifest" href="manifest.json" />
-  <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <meta name="apple-mobile-web-app-title" content="CAS App" />
-  <link rel="apple-touch-icon" href="icons/apple-icon-180.png" />
-
+  <link rel="manifest" href="manifest.json">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="CAS App">
+  <link rel="apple-touch-icon" href="icons/apple-icon-180.png">
+  
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
       theme: {
         extend: {
           fontFamily: {
-            sans: [
-              "-apple-system",
-              "BlinkMacSystemFont",
-              '"Segoe UI"',
-              "Roboto",
-              "Helvetica",
-              "Arial",
-              "sans-serif",
-            ],
+            sans:['-apple-system', 'BlinkMacSystemFont', '"Segoe UI"', 'Roboto', 'Helvetica', 'Arial', 'sans-serif'],
           },
           keyframes: {
-            blink: {"0%, 100%": {opacity: "1"}, "50%": {opacity: "0"}},
+            blink: { '0%, 100%': { opacity: '1' }, '50%': { opacity: '0' } }
           },
-          animation: {blink: "blink 1.2s step-end infinite"},
-        },
-      },
-    };
+          animation: { blink: 'blink 1.2s step-end infinite' }
+        }
+      }
+    }
   </script>
 </head>
+<body class="h-screen w-screen flex flex-col overflow-hidden bg-black select-none antialiased text-slate-900 font-sans relative">
 
-<body class="h-screen flex flex-col overflow-hidden bg-[#D4D4DB] select-none antialiased text-slate-900 font-sans">
-  <!-- =============================== -->
-  <!-- MAIN UI APP FRAME               -->
-  <!-- =============================== -->
-
-  <!-- 1. Top Bar -->
-  <div class="h-[52px] bg-[#31B222] flex justify-between items-center px-4 shrink-0">
-    <div class="flex items-center gap-6 text-white">
-      <div id="btn-exit" class="flex items-center gap-1 cursor-pointer hover:opacity-75 transition-opacity">
-        <img src="icons/chevron-left.svg" alt="Back" class="w-[24px] h-[24px]" />
-        <span class="text-[17px] font-medium tracking-tight">Exit</span>
+  <!-- ========================================================= -->
+  <!-- LAYER 0: FILE MANAGER SCREEN (Dark Mode, revealed later)  -->
+  <!-- ========================================================= -->
+  <div id="screen-files" class="absolute inset-0 z-0 flex bg-black text-white">
+    
+    <!-- Left Sidebar (Dark Gray) -->
+    <div class="w-[320px] bg-[#1C1C1E] border-r border-black flex flex-col pt-4 shrink-0 h-full overflow-hidden">
+      <!-- Top Icons -->
+      <div class="flex justify-between items-center px-5 mb-4">
+        <img src="icons/fm-folder-blue.svg" alt="Folder" class="w-[28px] h-[28px] cursor-pointer" />
+        <img src="icons/fm-ellipsis-circle.svg" alt="More" class="w-[28px] h-[28px] cursor-pointer" />
       </div>
-      <img src="icons/plus.svg" alt="Add"
-        class="w-[26px] h-[26px] cursor-pointer hover:opacity-75 transition-opacity" />
-      <img src="icons/undo.svg" alt="Undo"
-        class="w-[26px] h-[26px] cursor-pointer hover:opacity-75 transition-opacity" />
-      <img src="icons/redo.svg" alt="Redo"
-        class="w-[26px] h-[26px] cursor-pointer hover:opacity-75 transition-opacity" />
-      <img src="icons/broom.svg" alt="Clear"
-        class="w-[24px] h-[24px] cursor-pointer hover:opacity-75 transition-opacity" />
-    </div>
-    <div class="flex items-center gap-5 text-white">
-      <span class="text-[14px] font-medium tracking-wide">CAS</span>
-      <span class="text-[14px] font-medium tracking-wide">Code: 0000-0000</span>
-      <span class="text-[14px] font-medium tracking-wide">00:37</span>
-      <img src="icons/info.svg" alt="Info"
-        class="w-[24px] h-[24px] cursor-pointer hover:opacity-75 transition-opacity" />
-      <img src="icons/gear.svg" alt="Settings"
-        class="w-[24px] h-[24px] cursor-pointer hover:opacity-75 transition-opacity" />
-    </div>
-  </div>
-
-  <!-- 2. Sub Toolbar -->
-  <div class="h-[46px] bg-[#8E8E98] flex items-center border-b border-[#7C7C8A] shrink-0">
-    <div
-      class="w-[60px] h-full bg-[#ABABBA] text-[#F9F9F9] flex items-center justify-center text-[15px] font-medium border-r border-[#7C7C8A]">
-      1.1
-    </div>
-    <div class="flex gap-7 pl-6">
-      <img src="icons/wrench.svg" alt="Tools"
-        class="w-[22px] h-[22px] cursor-pointer hover:opacity-75 transition-opacity" />
-      <img src="icons/sliders.svg" alt="Properties"
-        class="w-[22px] h-[22px] cursor-pointer hover:opacity-75 transition-opacity" />
-    </div>
-  </div>
-
-  <!-- 3. Workspace -->
-  <div class="flex flex-1 overflow-hidden">
-    <div class="w-[50px] bg-[#D4D4DB] flex flex-col items-center pt-5 gap-7 shrink-0">
-      <div class="text-[12px] text-[#555] font-semibold tracking-wider text-center w-full">
-        DEG
+      
+      <!-- Title -->
+      <div class="px-5 mb-4 text-[28px] font-bold tracking-tight">
+        <span class="text-[#0A84FF]">TI-Nspire</span> <span class="text-[#5AC8FA]">CAS</span>
       </div>
-      <img src="icons/split-view.svg" alt="Split View"
-        class="w-[26px] h-[26px] cursor-pointer hover:opacity-75 transition-opacity" />
-      <img src="icons/book.svg" alt="Catalog"
-        class="w-[26px] h-[26px] cursor-pointer hover:opacity-75 transition-opacity" />
+
+      <!-- Navigation List -->
+      <div class="flex flex-col px-3 gap-1 overflow-y-auto">
+        
+        <!-- Recents (Active) -->
+        <div class="flex items-center gap-3 px-3 py-2 bg-[#3A3A3C] rounded-[10px] cursor-pointer">
+          <img src="icons/fm-clock.svg" class="w-6 h-6" />
+          <span class="text-[17px] font-medium text-white">Recents</span>
+        </div>
+        
+        <!-- Shared -->
+        <div class="flex items-center gap-3 px-3 py-2 cursor-pointer hover:bg-[#2C2C2E] rounded-[10px]">
+          <img src="icons/fm-folder-shared.svg" class="w-6 h-6" />
+          <span class="text-[17px] font-medium text-white">Shared</span>
+        </div>
+
+        <!-- Section: Locations -->
+        <div class="mt-4 mb-1 px-3 flex justify-between items-center">
+          <span class="text-[13px] font-semibold text-[#8E8E93]">Locations</span>
+          <img src="icons/fm-chevron-down.svg" class="w-4 h-4" />
+        </div>
+        <div class="flex items-center gap-3 px-3 py-2 cursor-pointer hover:bg-[#2C2C2E] rounded-[10px]">
+          <img src="icons/fm-ipad.svg" class="w-6 h-6" />
+          <span class="text-[17px] text-white">On My iPad</span>
+        </div>
+        <div class="flex items-center gap-3 px-3 py-2 cursor-pointer hover:bg-[#2C2C2E] rounded-[10px]">
+          <img src="icons/fm-acrobat.svg" class="w-6 h-6" />
+          <span class="text-[17px] text-white">Acrobat</span>
+        </div>
+        <div class="flex items-center gap-3 px-3 py-2 cursor-pointer hover:bg-[#2C2C2E] rounded-[10px]">
+          <img src="icons/fm-drive.svg" class="w-6 h-6" />
+          <span class="text-[17px] text-white">Drive</span>
+        </div>
+        
+        <!-- Section: Favourites -->
+        <div class="mt-4 mb-1 px-3 flex justify-between items-center">
+          <span class="text-[13px] font-semibold text-[#8E8E93]">Favourites</span>
+          <img src="icons/fm-chevron-down.svg" class="w-4 h-4" />
+        </div>
+        <div class="flex items-center gap-3 px-3 py-2 cursor-pointer hover:bg-[#2C2C2E] rounded-[10px]">
+          <img src="icons/fm-download.svg" class="w-6 h-6" />
+          <span class="text-[17px] text-white">Downloads</span>
+        </div>
+
+      </div>
     </div>
-    <div class="w-[10px] bg-[#D4D4DB] shrink-0"></div>
-    <div
-      class="flex-1 bg-[#FDFDFD] border-l border-[#C2C2CA] shadow-[-3px_0_12px_rgba(0,0,0,0.04)] p-6 cursor-text relative">
-      <span class="font-mono text-[24px] font-light text-black animate-blink absolute top-4 left-6">|</span>
+
+    <!-- Right Content Area (Black) -->
+    <div class="flex-1 bg-black flex flex-col pt-4">
+      <!-- Top Navigation -->
+      <div class="flex justify-between items-center px-6 h-[44px]">
+        <div class="flex gap-6">
+          <img src="icons/fm-back-disabled.svg" class="w-6 h-6 opacity-30" />
+          <img src="icons/fm-forward-disabled.svg" class="w-6 h-6 opacity-30" />
+          <img src="icons/fm-gear-blue.svg" class="w-6 h-6 cursor-pointer" />
+          <img src="icons/fm-help-blue.svg" class="w-6 h-6 cursor-pointer" />
+          <img src="icons/fm-lock-blue.svg" class="w-6 h-6 cursor-pointer" />
+        </div>
+        <div class="flex items-center gap-6">
+          <img src="icons/fm-plus-blue.svg" class="w-6 h-6 cursor-pointer" />
+          <span class="text-[#0A84FF] text-[17px] font-medium cursor-pointer">Select</span>
+          <img src="icons/fm-grid-blue.svg" class="w-6 h-6 cursor-pointer" />
+          <img src="icons/fm-search-blue.svg" class="w-6 h-6 cursor-pointer" />
+        </div>
+      </div>
+
+      <!-- Title -->
+      <div class="px-6 mt-2 mb-6 text-[34px] font-bold text-[#0A84FF] tracking-tight">
+        Recents
+      </div>
+
+      <!-- File Grid -->
+      <div class="px-6 flex gap-8">
+        <!-- Document Item -->
+        <div class="flex flex-col items-center gap-2 w-[80px] cursor-pointer">
+          <div class="w-[80px] h-[60px] bg-white rounded-md shadow-sm"></div>
+          <div class="text-[13px] text-white text-center leading-tight truncate w-full">Document.tns</div>
+          <div class="text-[11px] text-[#8E8E93] text-center leading-tight">Today, 16:16<br>1 KB</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ========================================================= -->
+  <!-- LAYER 1: CALCULATOR SCREEN (Slides away to the right)     -->
+  <!-- ========================================================= -->
+  <div id="screen-calc" class="absolute inset-0 z-10 flex flex-col bg-[#D4D4DB] shadow-[-15px_0_30px_rgba(0,0,0,0.4)] transition-transform duration-[400ms] ease-out transform translate-x-0">
+    
+    <!-- 1. Top Bar -->
+    <div class="h-[52px] bg-[#31B222] flex justify-between items-center px-4 shrink-0">
+      <div class="flex items-center gap-6 text-white">
+        <!-- EXIT BUTTON -->
+        <div id="btn-exit" class="flex items-center gap-1 cursor-pointer hover:opacity-75 transition-opacity">
+          <img src="icons/chevron-left.svg" alt="Back" class="w-[24px] h-[24px]" />
+          <span class="text-[17px] font-medium tracking-tight">Exit</span>
+        </div>
+        <img src="icons/plus.svg" alt="Add" class="w-[26px] h-[26px]" />
+        <img src="icons/undo.svg" alt="Undo" class="w-[26px] h-[26px]" />
+        <img src="icons/redo.svg" alt="Redo" class="w-[26px] h-[26px]" />
+        <img src="icons/broom.svg" alt="Clear" class="w-[24px] h-[24px]" />
+      </div>
+      <div class="flex items-center gap-5 text-white">
+        <span class="text-[14px] font-medium tracking-wide">CAS</span>
+        <span class="text-[14px] font-medium tracking-wide">Code: 0000-0000</span>
+        <span class="text-[14px] font-medium tracking-wide">00:37</span>
+        <img src="icons/info.svg" alt="Info" class="w-[24px] h-[24px]" />
+        <img src="icons/gear.svg" alt="Settings" class="w-[24px] h-[24px]" />
+      </div>
+    </div>
+
+    <!-- 2. Sub Toolbar -->
+    <div class="h-[46px] bg-[#8E8E98] flex items-center border-b border-[#7C7C8A] shrink-0">
+      <div class="w-[60px] h-full bg-[#ABABBA] text-[#F9F9F9] flex items-center justify-center text-[15px] font-medium border-r border-[#7C7C8A]">1.1</div>
+      <div class="flex gap-7 pl-6">
+        <img src="icons/wrench.svg" alt="Tools" class="w-[22px] h-[22px]" />
+        <img src="icons/sliders.svg" alt="Properties" class="w-[22px] h-[22px]" />
+      </div>
+    </div>
+
+    <!-- 3. Workspace -->
+    <div class="flex flex-1 overflow-hidden">
+      <div class="w-[50px] bg-[#D4D4DB] flex flex-col items-center pt-5 gap-7 shrink-0">
+        <div class="text-[12px] text-[#555] font-semibold tracking-wider text-center w-full">DEG</div>
+        <img src="icons/split-view.svg" alt="Split View" class="w-[26px] h-[26px]" />
+        <img src="icons/book.svg" alt="Catalog" class="w-[26px] h-[26px]" />
+      </div>
+      <div class="w-[10px] bg-[#D4D4DB] shrink-0"></div>
+      <div class="flex-1 bg-[#FDFDFD] border-l border-[#C2C2CA] p-6 relative">
+        <span class="font-mono text-[24px] font-light text-black animate-blink absolute top-4 left-6">|</span>
+      </div>
     </div>
   </div>
 
-  <!-- =============================== -->
-  <!-- NATIVE iOS ALERT MODAL          -->
-  <!-- =============================== -->
-
-  <div id="ios-alert-overlay"
-    class="fixed inset-0 z-[50] flex items-center justify-center bg-black/40 opacity-0 pointer-events-none transition-opacity duration-[250ms] ease-out">
-    <div id="ios-alert-box"
-      class="w-[270px] bg-white/85 backdrop-blur-xl rounded-[14px] flex flex-col overflow-hidden scale-[1.15] transition-transform duration-[250ms] ease-out shadow-2xl">
+  <!-- ========================================================= -->
+  <!-- LAYER 2: iOS ALERT MODAL                                  -->
+  <!-- ========================================================= -->
+  <div id="ios-alert-overlay" class="fixed inset-0 z-[50] flex items-center justify-center bg-black/40 opacity-0 pointer-events-none transition-opacity duration-[250ms] ease-out">
+    <div id="ios-alert-box" class="w-[270px] bg-white/85 backdrop-blur-xl rounded-[14px] flex flex-col overflow-hidden scale-[1.15] transition-transform duration-[250ms] ease-out shadow-2xl">
       <div class="px-4 pt-[18px] pb-[16px] flex flex-col items-center text-center">
         <span class="text-[17px] font-semibold tracking-tight text-black">Exit Test Mode</span>
         <span class="text-[13px] leading-[17px] text-black mt-[6px]">
-          TI-Nspire will exit Test Mode and Self-Lock will end. Content
-          created in Test Mode will not be available after exiting.<br /><br />Do
-          you want to exit Test Mode?
+          TI-Nspire will exit Test Mode and Self-Lock will end. Content created in Test Mode will not be available after exiting.<br><br>Do you want to exit Test Mode?
         </span>
       </div>
       <div class="flex border-t border-black/10 h-[44px]">
-        <button id="btn-alert-no"
-          class="flex-1 flex items-center justify-center text-[17px] tracking-tight text-[#007AFF] hover:bg-black/5 active:bg-black/10 border-r border-black/10 transition-colors">
-          No
-        </button>
-        <button id="btn-alert-yes"
-          class="flex-1 flex items-center justify-center text-[17px] tracking-tight font-semibold text-[#007AFF] hover:bg-black/5 active:bg-black/10 transition-colors">
-          Yes
-        </button>
+        <button id="btn-alert-no" class="flex-1 flex items-center justify-center text-[17px] tracking-tight text-[#007AFF] hover:bg-black/5 active:bg-black/10 border-r border-black/10 transition-colors">No</button>
+        <button id="btn-alert-yes" class="flex-1 flex items-center justify-center text-[17px] tracking-tight font-semibold text-[#007AFF] hover:bg-black/5 active:bg-black/10 transition-colors">Yes</button>
       </div>
     </div>
   </div>
 
-  <!-- =============================== -->
-  <!-- TEST MODE SUMMARY MODAL         -->
-  <!-- =============================== -->
-
-  <div id="summary-overlay"
-    class="fixed inset-0 z-[60] flex items-center justify-center bg-black/40 opacity-0 pointer-events-none transition-opacity duration-[300ms] ease-out">
-    <!-- Modal Box: Slides up and fades in -->
-    <div id="summary-box"
-      class="w-[540px] max-w-[90%] bg-white rounded-[14px] flex flex-col overflow-hidden transform translate-y-8 scale-[0.98] transition-all duration-[300ms] ease-out shadow-2xl relative">
+  <!-- ========================================================= -->
+  <!-- LAYER 3: TEST MODE SUMMARY MODAL                          -->
+  <!-- ========================================================= -->
+  <div id="summary-overlay" class="fixed inset-0 z-[60] flex items-center justify-center bg-black/40 opacity-0 pointer-events-none transition-opacity duration-[300ms] ease-out">
+    
+    <div id="summary-box" class="w-[540px] max-w-[90%] bg-white rounded-[14px] flex flex-col overflow-hidden transform translate-y-8 scale-[0.98] transition-all duration-[300ms] ease-out shadow-2xl relative">
+      
       <!-- Header -->
       <div class="h-[50px] flex items-center px-4 border-b border-gray-300 relative bg-white z-10 shrink-0">
-        <div class="absolute left-1/2 transform -translate-x-1/2 font-semibold text-[17px] text-black">
-          Test Mode Summary
-        </div>
-        <button id="btn-summary-done"
-          class="ml-auto text-[17px] text-[#007AFF] font-medium hover:opacity-75 transition-opacity">
-          Done
-        </button>
+        <div class="absolute left-1/2 transform -translate-x-1/2 font-semibold text-[17px] text-black">Test Mode Summary</div>
+        <button id="btn-summary-done" class="ml-auto text-[17px] text-[#007AFF] font-medium hover:opacity-75 transition-opacity">Done</button>
       </div>
-
-      <!-- Content Area with Background PNG -->
-      <!-- Replace 'background.png' with your actual image path -->
-      <div class="p-6 h-[580px] overflow-y-auto bg-white bg-center bg-cover bg-no-repeat relative z-0"
-        style="background-image: url(&quot;background.png&quot;)">
+      
+      <!-- Content Area (SCROLLING DISABLED via overflow-hidden) -->
+      <!-- Replace 'background.png' with your actual watermark image path -->
+      <div class="p-6 h-[580px] overflow-hidden bg-white bg-center bg-cover bg-no-repeat relative z-0" style="background-image: url('background.png');">
+        
         <p class="text-[17px] text-black leading-tight mb-8 pr-4">
-          Show this screen to your teacher. A screen capture has also been
-          saved to your iPad Photos.
+          Show this screen to your teacher. A screen capture has also been saved to your iPad Photos.
         </p>
-
+        
         <div class="flex flex-col gap-5">
           <div>
-            <div class="text-[11px] text-[#888] tracking-wide uppercase mb-1">
-              Test Code:
-            </div>
+            <div class="text-[11px] text-[#888] tracking-wide uppercase mb-1">Test Code:</div>
             <div class="text-[24px] text-black leading-none">0000-0000</div>
-            <div class="text-[16px] text-[#007AFF] mt-[6px]">
-              CAS Mode: On
-            </div>
+            <div class="text-[16px] text-[#007AFF] mt-[6px]">CAS Mode: On</div>
           </div>
-
           <div>
-            <div class="text-[11px] text-[#888] tracking-wide uppercase mb-[6px]">
-              Date:
-            </div>
-            <div class="text-[24px] text-black leading-none">
-              67. Mar 2026
-            </div>
+            <div class="text-[11px] text-[#888] tracking-wide uppercase mb-[6px]">Date:</div>
+            <div class="text-[24px] text-black leading-none">8. Mar 2026</div>
           </div>
-
           <div>
-            <div class="text-[11px] text-[#888] tracking-wide uppercase mb-[6px]">
-              Time in Test Mode:
-            </div>
-            <div class="text-[24px] text-black leading-none">67:67</div>
+            <div class="text-[11px] text-[#888] tracking-wide uppercase mb-[6px]">Time in Test Mode:</div>
+            <div class="text-[24px] text-black leading-none">03:30</div>
           </div>
-
           <div>
-            <div class="text-[11px] text-[#888] tracking-wide uppercase mb-[6px]">
-              Start Time:
-            </div>
-            <div class="text-[24px] text-black leading-none">67:67</div>
+            <div class="text-[11px] text-[#888] tracking-wide uppercase mb-[6px]">Start Time:</div>
+            <div class="text-[24px] text-black leading-none">16:17</div>
           </div>
-
           <div>
-            <div class="text-[11px] text-[#888] tracking-wide uppercase mb-[6px]">
-              End Time:
-            </div>
+            <div class="text-[11px] text-[#888] tracking-wide uppercase mb-[6px]">End Time:</div>
             <div class="text-[24px] text-black leading-none">16:20</div>
           </div>
-
           <div>
-            <div class="text-[11px] text-[#888] tracking-wide uppercase mb-[6px]">
-              Session ID:
-            </div>
-            <div class="text-[24px] text-black leading-none">
-              HEINO_GOONER
-            </div>
+            <div class="text-[11px] text-[#888] tracking-wide uppercase mb-[6px]">Session ID:</div>
+            <div class="text-[24px] text-black leading-none">653F00</div>
           </div>
-
           <div>
-            <div class="text-[11px] text-[#888] tracking-wide uppercase mb-[6px]">
-              Version:
-            </div>
+            <div class="text-[11px] text-[#888] tracking-wide uppercase mb-[6px]">Version:</div>
             <div class="text-[24px] text-black leading-none">6.3.0</div>
           </div>
         </div>
+
       </div>
     </div>
   </div>
 
-  <!-- =============================== -->
-  <!-- JAVASCRIPT LOGIC                -->
-  <!-- =============================== -->
-
+  <!-- ========================================================= -->
+  <!-- JAVASCRIPT LOGIC                                          -->
+  <!-- ========================================================= -->
   <script>
+    // Elements - Screens
+    const screenCalc = document.getElementById('screen-calc');
+
     // Elements - Alert
-    const btnExit = document.getElementById("btn-exit");
-    const alertOverlay = document.getElementById("ios-alert-overlay");
-    const alertBox = document.getElementById("ios-alert-box");
-    const btnAlertNo = document.getElementById("btn-alert-no");
-    const btnAlertYes = document.getElementById("btn-alert-yes");
+    const btnExit = document.getElementById('btn-exit');
+    const alertOverlay = document.getElementById('ios-alert-overlay');
+    const alertBox = document.getElementById('ios-alert-box');
+    const btnAlertNo = document.getElementById('btn-alert-no');
+    const btnAlertYes = document.getElementById('btn-alert-yes');
 
     // Elements - Summary
-    const summaryOverlay = document.getElementById("summary-overlay");
-    const summaryBox = document.getElementById("summary-box");
-    const btnSummaryDone = document.getElementById("btn-summary-done");
+    const summaryOverlay = document.getElementById('summary-overlay');
+    const summaryBox = document.getElementById('summary-box');
+    const btnSummaryDone = document.getElementById('btn-summary-done');
 
     // --- Alert Functions ---
     function showAlert() {
-      alertOverlay.classList.remove("pointer-events-none");
-      void alertOverlay.offsetWidth;
-      alertOverlay.classList.remove("opacity-0");
-      alertBox.classList.remove("scale-[1.15]");
-      alertBox.classList.add("scale-100");
+      alertOverlay.classList.remove('pointer-events-none');
+      void alertOverlay.offsetWidth; 
+      alertOverlay.classList.remove('opacity-0');
+      alertBox.classList.remove('scale-[1.15]');
+      alertBox.classList.add('scale-100');
     }
 
     function hideAlert() {
-      alertOverlay.classList.add("opacity-0");
-      alertBox.classList.remove("scale-100");
-      alertBox.classList.add("scale-[1.15]");
-      alertOverlay.classList.add("pointer-events-none");
+      alertOverlay.classList.add('opacity-0');
+      alertBox.classList.remove('scale-100');
+      alertBox.classList.add('scale-[1.15]');
+      alertOverlay.classList.add('pointer-events-none');
     }
 
     // --- Summary Modal Functions ---
     function showSummary() {
-      summaryOverlay.classList.remove("pointer-events-none");
+      summaryOverlay.classList.remove('pointer-events-none');
       void summaryOverlay.offsetWidth;
-      summaryOverlay.classList.remove("opacity-0");
-      summaryBox.classList.remove("translate-y-8", "scale-[0.98]");
-      summaryBox.classList.add("translate-y-0", "scale-100");
+      summaryOverlay.classList.remove('opacity-0');
+      summaryBox.classList.remove('translate-y-8', 'scale-[0.98]');
+      summaryBox.classList.add('translate-y-0', 'scale-100');
     }
 
     function hideSummary() {
-      summaryOverlay.classList.add("opacity-0");
-      summaryBox.classList.remove("translate-y-0", "scale-100");
-      summaryBox.classList.add("translate-y-8", "scale-[0.98]");
-      summaryOverlay.classList.add("pointer-events-none");
+      summaryOverlay.classList.add('opacity-0');
+      summaryBox.classList.remove('translate-y-0', 'scale-100');
+      summaryBox.classList.add('translate-y-8', 'scale-[0.98]');
+      summaryOverlay.classList.add('pointer-events-none');
     }
 
     // --- Event Listeners ---
-    btnExit.addEventListener("click", showAlert);
-    btnAlertNo.addEventListener("click", hideAlert);
-
-    // Clicking "Yes" closes alert, waits 250ms, then opens the Summary Modal
-    btnAlertYes.addEventListener("click", () => {
+    btnExit.addEventListener('click', showAlert);
+    btnAlertNo.addEventListener('click', hideAlert);
+    
+    // THE ANIMATION FLOW:
+    // 1. Hide the Alert Modal
+    // 2. Slide the Calculator Screen to the Right
+    // 3. Show the Test Mode Summary over the File Manager
+    btnAlertYes.addEventListener('click', () => {
+      // 1. Fade out alert
       hideAlert();
-      setTimeout(showSummary, 250);
+      
+      // 2. Wait for alert to disappear (250ms), then slide the calc screen away
+      setTimeout(() => {
+        screenCalc.classList.add('translate-x-full'); 
+        
+        // 3. Wait for the slide animation to finish (400ms), then show the summary
+        setTimeout(() => {
+          showSummary();
+        }, 400); 
+
+      }, 250); 
     });
 
-    btnSummaryDone.addEventListener("click", hideSummary);
+    btnSummaryDone.addEventListener('click', hideSummary);
 
-    // PWA Service Worker Registration
-    if ("serviceWorker" in navigator) {
-      window.addEventListener("load", () => {
-        navigator.serviceWorker.register("./sw.js").catch(() => { });
-      });
-    }
   </script>
 </body>
-
 </html>
