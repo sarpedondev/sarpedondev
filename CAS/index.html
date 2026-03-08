@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>TI-Nspire CAS Clone</title>
 
-  <!-- PWA & iOS Meta Tags -->
   <link rel="manifest" href="manifest.json">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -32,39 +31,30 @@
 <body class="h-screen w-screen flex flex-col overflow-hidden bg-black select-none antialiased text-slate-900 font-sans relative">
 
   <!-- ========================================================= -->
-  <!-- LAYER 0: FILE MANAGER SCREEN (Dark Mode, revealed later)  -->
+  <!-- LAYER 0: FILE MANAGER SCREEN                              -->
   <!-- ========================================================= -->
   <div id="screen-files" class="absolute inset-0 z-0 flex bg-black text-white">
-    
-    <!-- Left Sidebar (Dark Gray) -->
+    <!-- Left Sidebar -->
     <div class="w-[320px] bg-[#1C1C1E] border-r border-black flex flex-col pt-4 shrink-0 h-full overflow-hidden">
-      <!-- Top Icons -->
       <div class="flex justify-between items-center px-5 mb-4">
         <img src="icons/fm-folder-blue.svg" alt="Folder" class="w-[28px] h-[28px] cursor-pointer" />
         <img src="icons/fm-ellipsis-circle.svg" alt="More" class="w-[28px] h-[28px] cursor-pointer" />
       </div>
       
-      <!-- Title -->
+      <!-- Title: Both words are now the same blue -->
       <div class="px-5 mb-4 text-[28px] font-bold tracking-tight">
-        <span class="text-[#0A84FF]">TI-Nspire</span> <span class="text-[#5AC8FA]">CAS</span>
+        <span class="text-[#0A84FF]">TI-Nspire</span> <span class="text-[#0A84FF]">CAS</span>
       </div>
 
-      <!-- Navigation List -->
       <div class="flex flex-col px-3 gap-1 overflow-y-auto">
-        
-        <!-- Recents (Active) -->
         <div class="flex items-center gap-3 px-3 py-2 bg-[#3A3A3C] rounded-[10px] cursor-pointer">
           <img src="icons/fm-clock.svg" class="w-6 h-6" />
           <span class="text-[17px] font-medium text-white">Recents</span>
         </div>
-        
-        <!-- Shared -->
         <div class="flex items-center gap-3 px-3 py-2 cursor-pointer hover:bg-[#2C2C2E] rounded-[10px]">
           <img src="icons/fm-folder-shared.svg" class="w-6 h-6" />
           <span class="text-[17px] font-medium text-white">Shared</span>
         </div>
-
-        <!-- Section: Locations -->
         <div class="mt-4 mb-1 px-3 flex justify-between items-center">
           <span class="text-[13px] font-semibold text-[#8E8E93]">Locations</span>
           <img src="icons/fm-chevron-down.svg" class="w-4 h-4" />
@@ -81,8 +71,6 @@
           <img src="icons/fm-drive.svg" class="w-6 h-6" />
           <span class="text-[17px] text-white">Drive</span>
         </div>
-        
-        <!-- Section: Favourites -->
         <div class="mt-4 mb-1 px-3 flex justify-between items-center">
           <span class="text-[13px] font-semibold text-[#8E8E93]">Favourites</span>
           <img src="icons/fm-chevron-down.svg" class="w-4 h-4" />
@@ -91,13 +79,11 @@
           <img src="icons/fm-download.svg" class="w-6 h-6" />
           <span class="text-[17px] text-white">Downloads</span>
         </div>
-
       </div>
     </div>
 
-    <!-- Right Content Area (Black) -->
+    <!-- Right Content Area -->
     <div class="flex-1 bg-black flex flex-col pt-4">
-      <!-- Top Navigation -->
       <div class="flex justify-between items-center px-6 h-[44px]">
         <div class="flex gap-6">
           <img src="icons/fm-back-disabled.svg" class="w-6 h-6 opacity-30" />
@@ -113,15 +99,8 @@
           <img src="icons/fm-search-blue.svg" class="w-6 h-6 cursor-pointer" />
         </div>
       </div>
-
-      <!-- Title -->
-      <div class="px-6 mt-2 mb-6 text-[34px] font-bold text-[#0A84FF] tracking-tight">
-        Recents
-      </div>
-
-      <!-- File Grid -->
+      <div class="px-6 mt-2 mb-6 text-[34px] font-bold text-[#0A84FF] tracking-tight">Recents</div>
       <div class="px-6 flex gap-8">
-        <!-- Document Item -->
         <div class="flex flex-col items-center gap-2 w-[80px] cursor-pointer">
           <div class="w-[80px] h-[60px] bg-white rounded-md shadow-sm"></div>
           <div class="text-[13px] text-white text-center leading-tight truncate w-full">Document.tns</div>
@@ -129,51 +108,45 @@
         </div>
       </div>
     </div>
-
   </div>
 
   <!-- ========================================================= -->
-  <!-- LAYER 1: CALCULATOR SCREEN (Slides away to the right)     -->
+  <!-- LAYER 1: CALCULATOR SCREEN                                -->
   <!-- ========================================================= -->
   <div id="screen-calc" class="absolute inset-0 z-10 flex flex-col bg-[#D4D4DB] shadow-[-15px_0_30px_rgba(0,0,0,0.4)] transition-transform duration-[400ms] ease-out transform translate-x-0">
-    
-    <!-- 1. Top Bar -->
     <div class="h-[52px] bg-[#31B222] flex justify-between items-center px-4 shrink-0">
       <div class="flex items-center gap-6 text-white">
-        <!-- EXIT BUTTON -->
         <div id="btn-exit" class="flex items-center gap-1 cursor-pointer hover:opacity-75 transition-opacity">
           <img src="icons/chevron-left.svg" alt="Back" class="w-[24px] h-[24px]" />
           <span class="text-[17px] font-medium tracking-tight">Exit</span>
         </div>
-        <img src="icons/plus.svg" alt="Add" class="w-[26px] h-[26px]" />
-        <img src="icons/undo.svg" alt="Undo" class="w-[26px] h-[26px]" />
-        <img src="icons/redo.svg" alt="Redo" class="w-[26px] h-[26px]" />
-        <img src="icons/broom.svg" alt="Clear" class="w-[24px] h-[24px]" />
+        <img src="icons/plus.svg" class="w-[26px] h-[26px]" />
+        <img src="icons/undo.svg" class="w-[26px] h-[26px]" />
+        <img src="icons/redo.svg" class="w-[26px] h-[26px]" />
+        <img src="icons/broom.svg" class="w-[24px] h-[24px]" />
       </div>
       <div class="flex items-center gap-5 text-white">
         <span class="text-[14px] font-medium tracking-wide">CAS</span>
         <span class="text-[14px] font-medium tracking-wide">Code: 0000-0000</span>
-        <span class="text-[14px] font-medium tracking-wide">00:37</span>
-        <img src="icons/info.svg" alt="Info" class="w-[24px] h-[24px]" />
-        <img src="icons/gear.svg" alt="Settings" class="w-[24px] h-[24px]" />
+        <!-- LIVE TIMER -->
+        <span id="top-timer" class="text-[14px] font-medium tracking-wide w-[42px] text-right">00:00</span>
+        <img src="icons/info.svg" class="w-[24px] h-[24px]" />
+        <!-- SETTINGS BUTTON (GEAR) -->
+        <img id="btn-settings" src="icons/gear.svg" class="w-[24px] h-[24px] cursor-pointer hover:opacity-75" />
       </div>
     </div>
-
-    <!-- 2. Sub Toolbar -->
     <div class="h-[46px] bg-[#8E8E98] flex items-center border-b border-[#7C7C8A] shrink-0">
       <div class="w-[60px] h-full bg-[#ABABBA] text-[#F9F9F9] flex items-center justify-center text-[15px] font-medium border-r border-[#7C7C8A]">1.1</div>
       <div class="flex gap-7 pl-6">
-        <img src="icons/wrench.svg" alt="Tools" class="w-[22px] h-[22px]" />
-        <img src="icons/sliders.svg" alt="Properties" class="w-[22px] h-[22px]" />
+        <img src="icons/wrench.svg" class="w-[22px] h-[22px]" />
+        <img src="icons/sliders.svg" class="w-[22px] h-[22px]" />
       </div>
     </div>
-
-    <!-- 3. Workspace -->
     <div class="flex flex-1 overflow-hidden">
       <div class="w-[50px] bg-[#D4D4DB] flex flex-col items-center pt-5 gap-7 shrink-0">
         <div class="text-[12px] text-[#555] font-semibold tracking-wider text-center w-full">DEG</div>
-        <img src="icons/split-view.svg" alt="Split View" class="w-[26px] h-[26px]" />
-        <img src="icons/book.svg" alt="Catalog" class="w-[26px] h-[26px]" />
+        <img src="icons/split-view.svg" class="w-[26px] h-[26px]" />
+        <img src="icons/book.svg" class="w-[26px] h-[26px]" />
       </div>
       <div class="w-[10px] bg-[#D4D4DB] shrink-0"></div>
       <div class="flex-1 bg-[#FDFDFD] border-l border-[#C2C2CA] p-6 relative">
@@ -204,55 +177,47 @@
   <!-- LAYER 3: TEST MODE SUMMARY MODAL                          -->
   <!-- ========================================================= -->
   <div id="summary-overlay" class="fixed inset-0 z-[60] flex items-center justify-center bg-black/40 opacity-0 pointer-events-none transition-opacity duration-[300ms] ease-out">
-    
     <div id="summary-box" class="w-[540px] max-w-[90%] bg-white rounded-[14px] flex flex-col overflow-hidden transform translate-y-8 scale-[0.98] transition-all duration-[300ms] ease-out shadow-2xl relative">
-      
-      <!-- Header -->
       <div class="h-[50px] flex items-center px-4 border-b border-gray-300 relative bg-white z-10 shrink-0">
         <div class="absolute left-1/2 transform -translate-x-1/2 font-semibold text-[17px] text-black">Test Mode Summary</div>
         <button id="btn-summary-done" class="ml-auto text-[17px] text-[#007AFF] font-medium hover:opacity-75 transition-opacity">Done</button>
       </div>
       
-      <!-- Content Area (SCROLLING DISABLED via overflow-hidden) -->
-      <!-- Replace 'background.png' with your actual watermark image path -->
       <div class="p-6 h-[580px] overflow-hidden bg-white bg-center bg-cover bg-no-repeat relative z-0" style="background-image: url('background.png');">
-        
         <p class="text-[17px] text-black leading-tight mb-8 pr-4">
           Show this screen to your teacher. A screen capture has also been saved to your iPad Photos.
         </p>
-        
         <div class="flex flex-col gap-5">
           <div>
             <div class="text-[11px] text-[#888] tracking-wide uppercase mb-1">Test Code:</div>
-            <div class="text-[24px] text-black leading-none">0000-0000</div>
+            <div id="summary-test-code" class="text-[24px] text-black leading-none">0000-0000</div>
             <div class="text-[16px] text-[#007AFF] mt-[6px]">CAS Mode: On</div>
           </div>
           <div>
             <div class="text-[11px] text-[#888] tracking-wide uppercase mb-[6px]">Date:</div>
-            <div class="text-[24px] text-black leading-none">8. Mar 2026</div>
+            <div id="summary-date" class="text-[24px] text-black leading-none"></div>
           </div>
           <div>
             <div class="text-[11px] text-[#888] tracking-wide uppercase mb-[6px]">Time in Test Mode:</div>
-            <div class="text-[24px] text-black leading-none">03:30</div>
+            <div id="summary-duration" class="text-[24px] text-black leading-none">00:00</div>
           </div>
           <div>
             <div class="text-[11px] text-[#888] tracking-wide uppercase mb-[6px]">Start Time:</div>
-            <div class="text-[24px] text-black leading-none">16:17</div>
+            <div id="summary-start" class="text-[24px] text-black leading-none"></div>
           </div>
           <div>
             <div class="text-[11px] text-[#888] tracking-wide uppercase mb-[6px]">End Time:</div>
-            <div class="text-[24px] text-black leading-none">16:20</div>
+            <div id="summary-end" class="text-[24px] text-black leading-none"></div>
           </div>
           <div>
             <div class="text-[11px] text-[#888] tracking-wide uppercase mb-[6px]">Session ID:</div>
-            <div class="text-[24px] text-black leading-none">653F00</div>
+            <div id="summary-session" class="text-[24px] text-black leading-none">000000</div>
           </div>
           <div>
             <div class="text-[11px] text-[#888] tracking-wide uppercase mb-[6px]">Version:</div>
             <div class="text-[24px] text-black leading-none">6.3.0</div>
           </div>
         </div>
-
       </div>
     </div>
   </div>
@@ -261,17 +226,75 @@
   <!-- JAVASCRIPT LOGIC                                          -->
   <!-- ========================================================= -->
   <script>
-    // Elements - Screens
-    const screenCalc = document.getElementById('screen-calc');
+    // --- State Variables ---
+    let startTime = new Date(); // Defaults to page load time
+    let testActive = true;
 
-    // Elements - Alert
+    // --- Strict formatting helpers to guarantee exact PC Local Time in 24h format ---
+    function pad(num) { 
+      return num.toString().padStart(2, '0'); 
+    }
+    
+    function formatTime(date) {
+      // Directly pulling getHours() ensures 100% adherence to your OS's local timezone.
+      // Padding it ensures strictly 24-hour format (e.g. 19:28)
+      return `${pad(date.getHours())}:${pad(date.getMinutes())}`;
+    }
+
+    function formatDate(date) {
+      // Directly formatting date to match exactly "8. Mar 2026"
+      const months =["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+      return `${date.getDate()}. ${months[date.getMonth()]} ${date.getFullYear()}`;
+    }
+
+    // --- Live Timer Logic ---
+    const topTimerEl = document.getElementById('top-timer');
+    
+    function updateTimer() {
+      const now = new Date();
+      let diffMs = now - startTime;
+      if (diffMs < 0) diffMs = 0; 
+      
+      const totalSecs = Math.floor(diffMs / 1000);
+      const mins = Math.floor(totalSecs / 60);
+      const secs = totalSecs % 60;
+      
+      // Calculate final timer string MM:SS
+      const timeString = `${pad(mins)}:${pad(secs)}`;
+      
+      // Only update top bar if test mode is running
+      if (testActive) {
+        topTimerEl.innerText = timeString;
+      }
+      
+      return timeString; // Always return the calculated time so we can fetch it when paused
+    }
+    
+    // Run timer immediately and update every second
+    updateTimer();
+    setInterval(updateTimer, 1000);
+
+    // --- Settings / Config Button ---
+    document.getElementById('btn-settings').addEventListener('click', () => {
+      // Set to 24h format for simplicity in the prompt parsing
+      const currentPromptTime = formatTime(startTime);
+      const input = prompt("Override Start Time (Format: HH:MM, 24-hour clock):", currentPromptTime);
+      
+      if (input && /^\d{1,2}:\d{2}$/.test(input)) {
+        const [hh, mm] = input.split(':').map(Number);
+        const now = new Date();
+        startTime = new Date(now.getFullYear(), now.getMonth(), now.getDate(), hh, mm, 0);
+        updateTimer();
+      }
+    });
+
+    // --- DOM Elements ---
+    const screenCalc = document.getElementById('screen-calc');
     const btnExit = document.getElementById('btn-exit');
     const alertOverlay = document.getElementById('ios-alert-overlay');
     const alertBox = document.getElementById('ios-alert-box');
     const btnAlertNo = document.getElementById('btn-alert-no');
     const btnAlertYes = document.getElementById('btn-alert-yes');
-
-    // Elements - Summary
     const summaryOverlay = document.getElementById('summary-overlay');
     const summaryBox = document.getElementById('summary-box');
     const btnSummaryDone = document.getElementById('btn-summary-done');
@@ -292,8 +315,26 @@
       alertOverlay.classList.add('pointer-events-none');
     }
 
-    // --- Summary Modal Functions ---
-    function showSummary() {
+    // --- Summary Modal Population & Display ---
+    function populateAndShowSummary() {
+      // 1. Pause the timer globally
+      testActive = false; 
+      const endTime = new Date();
+
+      // 2. Generate random Session ID (Hex format)
+      const sessionHex = Math.random().toString(16).substring(2, 8).toUpperCase();
+
+      // 3. Inject Data
+      document.getElementById('summary-test-code').innerText = "0000-0000";
+      document.getElementById('summary-date').innerText = formatDate(endTime);
+      document.getElementById('summary-start').innerText = formatTime(startTime);
+      document.getElementById('summary-end').innerText = formatTime(endTime);
+      
+      // 4. Fetch the final MM:SS calculated by the timer function
+      document.getElementById('summary-duration').innerText = updateTimer(); 
+      document.getElementById('summary-session').innerText = sessionHex;
+
+      // 5. Animate Modal In
       summaryOverlay.classList.remove('pointer-events-none');
       void summaryOverlay.offsetWidth;
       summaryOverlay.classList.remove('opacity-0');
@@ -312,28 +353,17 @@
     btnExit.addEventListener('click', showAlert);
     btnAlertNo.addEventListener('click', hideAlert);
     
-    // THE ANIMATION FLOW:
-    // 1. Hide the Alert Modal
-    // 2. Slide the Calculator Screen to the Right
-    // 3. Show the Test Mode Summary over the File Manager
     btnAlertYes.addEventListener('click', () => {
-      // 1. Fade out alert
       hideAlert();
-      
-      // 2. Wait for alert to disappear (250ms), then slide the calc screen away
       setTimeout(() => {
-        screenCalc.classList.add('translate-x-full'); 
-        
-        // 3. Wait for the slide animation to finish (400ms), then show the summary
+        screenCalc.classList.add('translate-x-full'); // Slide Calculator away
         setTimeout(() => {
-          showSummary();
+          populateAndShowSummary(); // Generate dynamic data and show modal
         }, 400); 
-
       }, 250); 
     });
 
     btnSummaryDone.addEventListener('click', hideSummary);
-
   </script>
 </body>
 </html>
