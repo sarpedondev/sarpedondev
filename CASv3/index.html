@@ -31,9 +31,14 @@
       -webkit-overflow-scrolling: auto;
     }
   </style>
+
+  <script src="https://cdn.jsdelivr.net/npm/nerdamer@latest/nerdamer.core.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/nerdamer@latest/Algebra.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/nerdamer@latest/Calculus.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/nerdamer@latest/Solve.js"></script>
 </head>
 <!-- Added fixed, inset-0, touch-none, and overscroll-none to lock the viewport entirely -->
-<body class="fixed inset-0 flex flex-col overflow-hidden bg-black select-none antialiased text-slate-900 font-sans touch-none overscroll-none">
+<body class="fixed inset-0 flex flex-col overflow-hidden bg-black antialiased text-slate-900 font-sans touch-none overscroll-none">
 
   <!-- ========================================================= -->
   <!-- LAYER 0: FILE MANAGER SCREEN                              -->
@@ -156,11 +161,17 @@
       
       <!-- Typable Workspace -->
       <div class="flex-1 bg-[#FDFDFD] border-l border-[#C2C2CA] p-6 relative overflow-hidden">
-        <textarea 
-          class="w-full h-full resize-none outline-none bg-transparent text-[24px] font-math text-black leading-relaxed" 
-          spellcheck="false" 
-          placeholder=""
-        ></textarea>
+        <div class="w-full h-full flex flex-col">
+          <div
+            id="cas-workspace"
+            class="w-full h-full overflow-y-auto text-[24px] font-math text-black"
+          ></div>
+
+        <div
+            id="cas-output"
+            class="border-t border-gray-300 mt-4 pt-4 text-[22px] font-math text-blue-700 whitespace-pre-wrap"
+        ></div>
+        </div>
       </div>
 
     </div>
@@ -233,15 +244,39 @@
     </div>
   </div>
 
+  <!-- HELP OVERLAY -->
+  <div id="help-overlay" class="fixed inset-0 z-[80] bg-black/60 opacity-0 pointer-events-none transition-opacity"></div>
+
+  <!-- HELP BOX -->
+  <div id="help-box" class="fixed z-[90] left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[360px] bg-white rounded-xl shadow-2xl p-5 opacity-0 pointer-events-none transition-all scale-95">
+  
+    <div class="flex justify-between items-center mb-3">
+      <div class="text-[18px] font-semibold">Befehle</div>
+      <button id="help-close" class="text-[18px] font-bold">×</button>
+    </div>
+
+    <div class="text-[14px] leading-relaxed space-y-2">
+      <div><b>Mathematische Operationen:</b> z. B. <code>2+2</code>, <code>sqrt(9)</code></div>
+      <div><b>Lösen:</b> <code>solve(x^2=4,x)</code></div>
+      <div><b>Ableiten:</b> <code>diff(x^2,x)</code></div>
+      <div><b>Integrieren:</b> <code>integrate(x^2,x)</code></div>
+      <div><b>Letztes Ergebnis:</b> <code>Ans</code></div>
+      <div><b>Einvariabelfunktionen definieren:</b> <code>define(f1(x)=2x+3)</code></div>
+      <div><b>Einvariabelfunktionen nutzen:</b> <code>f1(x)</code></div>
+      <div><b>Multiariabelfunktionen definieren:</b> <code>define(f1(x,y,...)=2x+5y+...)</code></div>
+      <div><b>Multivariabelfunktionen nutzen:</b> <code>f1(x,y,...)</code></div>
+    </div>
+  </div>
   <!-- ========================================================= -->
   <!-- JAVASCRIPT LOGIC                                          -->
   <!-- ========================================================= -->
   <script>
     // --- Anti-Rubber-Banding Protocol for iOS ---
     // This absolutely forces iOS to never "bounce" the screen when dragging a finger
-    document.addEventListener('touchmove', function(e) {
+document.addEventListener('touchmove', function(e) {
       // Allow scrolling inside the textarea if the user types too many lines
-      if(e.target.tagName !== 'TEXTAREA') {
+      if (e.target && e.target.tagName !== 'TEXTAREA' && e.target.tagName !== 'TEXTAREA'.toUpperCase()) {
+        // Prevent swipe/drag gestures from interfering with interaction
         e.preventDefault();
       }
     }, { passive: false });
@@ -249,6 +284,8 @@
     // --- State Variables ---
     let startTime = new Date(); // Defaults to page load time
     let testActive = true;
+    let Ans = null;
+    let userFunctions = {};
 
     function pad(num) { return num.toString().padStart(2, '0'); }
     
@@ -305,6 +342,29 @@
     const summaryBox = document.getElementById('summary-box');
     const btnSummaryDone = document.getElementById('btn-summary-done');
 
+    const helpBtn = document.querySelector('img[src="icons/book.svg"]');
+    const helpOverlay = document.getElementById('help-overlay');
+    const helpBox = document.getElementById('help-box');
+    const helpClose = document.getElementById('help-close');
+
+    function showHelp() {
+      helpOverlay.classList.remove('opacity-0', 'pointer-events-none');
+      helpBox.classList.remove('opacity-0', 'pointer-events-none', 'scale-95');
+      helpOverlay.classList.add('opacity-100');
+      helpBox.classList.add('opacity-100', 'scale-100');
+    }
+
+    function hideHelp() {
+      helpOverlay.classList.add('opacity-0', 'pointer-events-none');
+      helpBox.classList.add('opacity-0', 'pointer-events-none', 'scale-95');
+      helpOverlay.classList.remove('opacity-100');
+      helpBox.classList.remove('opacity-100', 'scale-100');
+    }
+
+    helpBtn.addEventListener('click', showHelp);
+    helpClose.addEventListener('click', hideHelp);
+    helpOverlay.addEventListener('click', hideHelp);
+
     function showAlert() {
       alertOverlay.classList.remove('pointer-events-none');
       void alertOverlay.offsetWidth; 
@@ -360,6 +420,220 @@
     });
 
     btnSummaryDone.addEventListener('click', hideSummary);
+
+    function calculate(expression) {
+
+        try {
+
+            expression = expression.trim();
+
+            if (expression.startsWith('define(')) {
+
+              const inner = expression.slice(7, -1).trim();
+
+              const [left, right] = inner.split('=');
+
+              if (!left || !right) return 'Error';
+
+              const nameMatch = left.match(/^([a-zA-Z]\w*)\((.*?)\)$/);
+
+              if (!nameMatch) return 'Error';
+
+             const funcName = nameMatch[1];
+
+              // supports: x, y, z...
+             const params = nameMatch[2].split(',').map(p => p.trim());
+
+             userFunctions[funcName] = {
+                 params,
+                  expr: right
+             };
+
+              return `done`;
+          }
+
+            if (/^[+\-*/^]/.test(expression)) {
+              expression = 'Ans' + expression;
+            }
+
+            if (Ans !== null) {
+              expression = expression.replace(/\b(ans|Ans|ANS)\b/g, `(${Ans})`);
+            }
+
+            let result;
+
+            const funcCall = expression.match(/^([a-zA-Z]\w*)\(([^)]*)\)$/);
+
+            if (funcCall && userFunctions[funcCall[1]]) {
+
+                const fn = userFunctions[funcCall[1]];
+                const args = funcCall[2]
+                    .split(',')
+                    .map(a => nerdamer(a.trim()).toString());
+
+                if (args.length !== fn.params.length) {
+                   return 'Error (wrong args)';
+               }
+
+               let expr = fn.expr;
+
+                 // replace each variable
+             fn.params.forEach((param, i) => {
+                    expr = expr.replace(new RegExp(`\\b${param}\\b`, 'g'), `(${args[i]})`);
+               });
+
+                  // fix implicit multiplication like 7x → 7*x
+              expr = expr.replace(/(\d)([a-zA-Z])/g, '$1*$2');
+
+                const result = nerdamer(expr).toString();
+
+                Ans = result;
+                return result;
+            }
+
+
+            if (expression.startsWith('solve(')) {
+
+                const inner = expression.slice(6, -1);
+
+                const parts = inner.split(',');
+
+                result = nerdamer.solveEquations(
+                    parts[0],
+                    parts[1] || 'x'
+                );
+            }
+
+            else if (expression.startsWith('diff(')) {
+
+                const inner = expression.slice(5, -1);
+
+                const [expr,varName='x'] =
+                    inner.split(',');
+
+                result =
+                    nerdamer.diff(expr,varName)
+                    .toString();
+            }
+
+            else if (expression.startsWith('integrate(')) {
+
+                const inner = expression.slice(10,-1);
+
+                const [expr,varName='x'] =
+                    inner.split(',');
+
+                result =
+                    nerdamer.integrate(expr,varName)
+                    .toString();
+            }
+
+            else {
+                result =
+                    nerdamer(expression)
+                    .toString();
+            }
+
+            Ans = result;
+
+            return result;
+        }
+
+        catch(err) {
+
+            return 'Error';
+        }
+    }
+
+    const workspace = document.getElementById('cas-workspace');
+
+    function createInputLine() {
+
+        const row = document.createElement('div');
+
+        row.className =
+            'flex items-start justify-between min-h-[42px] w-full';
+
+        const input = document.createElement('textarea');
+
+        input.rows = 1;
+
+        input.className =
+            'flex-1 bg-transparent outline-none resize-none overflow-hidden text-[24px] font-math';
+
+        const result = document.createElement('div');
+
+        result.className =
+            'ml-8 min-w-[120px] text-right text-[24px] font-math text-black';
+
+        row.appendChild(input);
+        row.appendChild(result);
+
+        workspace.appendChild(row);
+
+        input.focus();
+
+        function autoResize() {
+
+            input.style.height = 'auto';
+
+            input.style.height =
+                input.scrollHeight + 'px';
+        }
+
+        input.addEventListener('input', () => {
+          let val = input.value;
+
+          // If expression starts with operator, prepend Ans
+          if (/^[+\-*/^]/.test(val)) {
+              val = 'Ans' + val;
+          }
+
+          // Avoid stacking AnsAnsAns...
+          val = val.replace(/^(Ans)+/g, 'Ans');
+
+          input.value = val;
+
+          autoResize();
+        });
+
+        input.addEventListener('keydown', function(e) {
+
+            if (e.key !== 'Enter') return;
+
+            e.preventDefault();
+
+            const expression =
+                input.value.trim();
+
+            if (!expression) return;
+
+            const answer =
+                calculate(expression);
+
+            result.textContent = answer;
+
+            input.disabled = true;
+
+            input.classList.add(
+                'text-black',
+                'opacity-100'
+            );
+
+            createInputLine();
+
+            workspace.scrollTop =
+                workspace.scroll342134212342134231432423Height;
+        });
+
+        autoResize();
+
+        
+    }
+    
+    window.addEventListener('DOMContentLoaded', () => {
+      createInputLine();
+    });
   </script>
 </body>
 </html>
