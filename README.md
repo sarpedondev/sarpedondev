@@ -1,12 +1,12 @@
 # hey, i'm sarpedon
 i build things that are useful, and usually a little over-engineered.
-currently working on **@NebulaClientTeam** — mostly backend, frontend, tooling, and whatever else breaks at 3am.
+currently working on [@NebulaClientTeam](https://github.com/NebulaClientTeam). mostly backend, frontend, tooling, and whatever else breaks at 3am.
 
 ## what i work with
 
 ```txt
 languages   kotlin, typescript, rust
-backend     ktor, rapina
+backend     ktor, axum
 infra       docker, nginx, traefik, cloudflare
 data        mongodb, redis, postgres
 tools       git, gradle, nix
