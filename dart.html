@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Klettdart Punktezähler</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#e6f3f5; --surface:#ffffff; --ink:#173342; --muted:#4f6b78; --line:#c5dde3;
+  --btn:#173342; --btn-ink:#ffffff; --accent:#1f6fa8;
+  color-scheme: light;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#11222c; --surface:#1a3240; --ink:#eef6f8; --muted:#9fbac4; --line:#2b4a5a;
+    --btn:#f2d45c; --btn-ink:#11222c; --accent:#8fcbe0; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#11222c; --surface:#1a3240; --ink:#eef6f8; --muted:#9fbac4; --line:#2b4a5a;
+  --btn:#f2d45c; --btn-ink:#11222c; --accent:#8fcbe0; color-scheme: dark;
+}
+*,*::before,*::after{box-sizing:inherit}
+html,body{margin:0;height:100%}
+body{
+  background:var(--bg); color:var(--ink);
+  font-family:"Baloo 2", "Trebuchet MS", system-ui, sans-serif;
+  display:flex; flex-direction:column; align-items:center;
+  -webkit-tap-highlight-color:transparent;
+}
+main{width:100%;max-width:560px;padding:16px 16px 24px;display:flex;flex-direction:column;gap:14px;flex:1}
+.score{display:flex;align-items:flex-end;justify-content:space-between;gap:12px}
+.total{font-size:clamp(3.4rem,16vw,5.2rem);font-weight:800;line-height:.9;letter-spacing:-.02em}
+.total small{display:block;font-size:1rem;font-weight:500;color:var(--muted);letter-spacing:0;margin-bottom:6px}
+.last{font-size:1.1rem;color:var(--muted);text-align:right;min-height:1.6em}
+.last b{color:var(--ink);font-size:1.6rem}
+.board-wrap{width:100%;aspect-ratio:1;position:relative}
+svg{width:100%;height:100%;display:block;touch-action:manipulation;user-select:none}
+.seg{cursor:pointer;transition:filter .12s}
+.seg:active{filter:brightness(1.12)}
+.seg:focus-visible{outline:none;stroke:var(--ink);stroke-width:6}
+.num{font-family:"Baloo 2","Trebuchet MS",sans-serif;font-weight:800;fill:#fff;pointer-events:none;
+  paint-order:stroke;stroke:rgba(0,0,0,.08);stroke-width:2}
+.ball{pointer-events:none;animation:stick .22s ease-out}
+@keyframes stick{from{transform:scale(1.8);opacity:0}to{transform:scale(1);opacity:1}}
+@media (prefers-reduced-motion: reduce){.ball{animation:none}.seg{transition:none}}
+.controls{display:flex;gap:10px}
+button{
+  font:inherit;font-weight:700;font-size:1.05rem;border:0;border-radius:999px;
+  padding:12px 18px;cursor:pointer;flex:1;
+}
+.primary{background:var(--btn);color:var(--btn-ink)}
+.secondary{background:var(--surface);color:var(--ink);box-shadow:inset 0 0 0 2px var(--line)}
+button:disabled{opacity:.4;cursor:default}
+button:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.hits{display:flex;flex-wrap:wrap;gap:6px;min-height:34px;align-content:flex-start}
+.hit{background:var(--surface);border:2px solid var(--line);border-radius:999px;padding:0 12px;font-weight:700;line-height:28px}
+.empty{color:var(--muted)}
+</style>
+</head>
+<body>
+<main>
+  <div class="score">
+    <div class="total"><small>Punkte</small><span id="total">0</span></div>
+    <div class="last" id="last">Tippe auf ein Feld</div>
+  </div>
+
+  <div class="board-wrap"><svg id="board" viewBox="-520 -520 1040 1040" aria-label="Dartscheibe"></svg></div>
+
+  <div class="controls">
+    <button class="secondary" id="undo" disabled>Rückgängig</button>
+    <button class="primary" id="reset" disabled>Neue Runde</button>
+  </div>
+  <div class="hits" id="hits"><span class="empty">Noch keine Treffer</span></div>
+</main>
+
+<script>
+(function(){
+  const C = {y:"#f2d45c", g:"#9ccb6b", l:"#8fcbe0", d:"#2f6ea8", r:"#e5523b", rim:"#6fbfb3"};
+  const R = {bull:90, inner:220, mid:360, outer:500};
+  // angles in degrees, clockwise from 12 o'clock
+  const segments = [
+    // outer ring: all 10
+    ...[["g",0],["l",45],["d",90],["y",135],["g",180],["l",225],["d",270],["y",315]]
+      .map(([c,a]) => ({r0:R.mid, r1:R.outer, a0:a, a1:a+45, col:C[c], pts:10})),
+    // middle ring
+    ...[["d",0,40],["y",45,30],["g",90,20],["l",135,50],["d",180,40],["y",225,30],["g",270,20],["l",315,30]]
+      .map(([c,a,p]) => ({r0:R.inner, r1:R.mid, a0:a, a1:a+45, col:C[c], pts:p})),
+    // inner ring: 4 quadrants turned 45°
+    ...[["g",-45,90],["y",45,70],["d",135,60],["l",225,80]]
+      .map(([c,a,p]) => ({r0:R.bull, r1:R.inner, a0:a, a1:a+90, col:C[c], pts:p})),
+  ];
+
+  const svg = document.getElementById("board");
+  const NS = "http://www.w3.org/2000/svg";
+  const el = (n, a) => { const e = document.createElementNS(NS, n); for (const k in a) e.setAttribute(k, a[k]); return e; };
+  const pt = (r, deg) => { const t = (deg - 90) * Math.PI / 180; return [r * Math.cos(t), r * Math.sin(t)]; };
+
+  svg.appendChild(el("circle", {cx:0, cy:0, r:R.outer + 14, fill:C.rim}));
+
+  const ballColors = ["#f39c3d","#4fb36b","#3aa39a","#e8b23a"];
+  const balls = el("g", {});
+  const state = {hits: []};
+
+  function addSeg(s){
+    let d;
+    const [x0,y0] = pt(s.r1, s.a0), [x1,y1] = pt(s.r1, s.a1);
+    const [x2,y2] = pt(s.r0, s.a1), [x3,y3] = pt(s.r0, s.a0);
+    const large = (s.a1 - s.a0) > 180 ? 1 : 0;
+    d = `M${x0},${y0} A${s.r1},${s.r1} 0 ${large} 1 ${x1},${y1} L${x2},${y2} A${s.r0},${s.r0} 0 ${large} 0 ${x3},${y3} Z`;
+    const p = el("path", {d, fill:s.col, stroke:"#fff", "stroke-width":10, "stroke-linejoin":"round",
+      class:"seg", tabindex:0, role:"button", "aria-label":`${s.pts} Punkte`});
+    bind(p, s.pts);
+    svg.appendChild(p);
+    const mid = (s.a0 + s.a1) / 2, rr = (s.r0 + s.r1) / 2;
+    const [tx,ty] = pt(rr, mid);
+    const size = s.r1 === R.outer ? 74 : s.r1 === R.mid ? 70 : 64;
+    const t = el("text", {x:tx, y:ty, class:"num", "text-anchor":"middle", "dominant-baseline":"central", "font-size":size});
+    t.textContent = s.pts;
+    svg.appendChild(t);
+  }
+  segments.forEach(addSeg);
+
+  const bull = el("circle", {cx:0, cy:0, r:R.bull, fill:C.r, stroke:"#fff", "stroke-width":10,
+    class:"seg", tabindex:0, role:"button", "aria-label":"100 Punkte"});
+  bind(bull, 100);
+  svg.appendChild(bull);
+  const bt = el("text", {x:0, y:0, class:"num", "text-anchor":"middle", "dominant-baseline":"central", "font-size":70});
+  bt.textContent = "100";
+  svg.appendChild(bt);
+  svg.appendChild(balls);
+
+  function bind(node, pts){
+    node.addEventListener("click", e => {
+      let x, y;
+      if (e.detail === 0) { // keyboard
+        const b = node.getBBox(); x = b.x + b.width/2; y = b.y + b.height/2;
+      } else {
+        const m = svg.getScreenCTM().inverse();
+        const p = new DOMPoint(e.clientX, e.clientY).matrixTransform(m);
+        x = p.x; y = p.y;
+      }
+      hit(pts, x, y);
+    });
+    node.addEventListener("keydown", e => {
+      if (e.key === "Enter" || e.key === " ") { e.preventDefault(); node.dispatchEvent(new MouseEvent("click", {detail:0})); }
+    });
+  }
+
+  function hit(pts, x, y){
+    const color = ballColors[state.hits.length % ballColors.length];
+    const g = el("g", {class:"ball", style:`transform-origin:${x}px ${y}px`});
+    g.appendChild(el("circle", {cx:x, cy:y, r:30, fill:color, stroke:"rgba(0,0,0,.25)", "stroke-width":3}));
+    g.appendChild(el("circle", {cx:x-9, cy:y-10, r:9, fill:"rgba(255,255,255,.55)"}));
+    balls.appendChild(g);
+    state.hits.push({pts, node:g});
+    if (navigator.vibrate) { try { navigator.vibrate(15); } catch(_){} }
+    render();
+  }
+
+  function render(){
+    const total = state.hits.reduce((s,h) => s + h.pts, 0);
+    document.getElementById("total").textContent = total;
+    const last = state.hits[state.hits.length - 1];
+    document.getElementById("last").innerHTML = last ? `Treffer <b>+${last.pts}</b>` : "Tippe auf ein Feld";
+    const hits = document.getElementById("hits");
+    hits.innerHTML = state.hits.length
+      ? state.hits.map(h => `<span class="hit">${h.pts}</span>`).join("")
+      : '<span class="empty">Noch keine Treffer</span>';
+    document.getElementById("undo").disabled = !state.hits.length;
+    document.getElementById("reset").disabled = !state.hits.length;
+  }
+
+  document.getElementById("undo").addEventListener("click", () => {
+    const h = state.hits.pop(); if (h) h.node.remove(); render();
+  });
+  document.getElementById("reset").addEventListener("click", () => {
+    state.hits.forEach(h => h.node.remove()); state.hits = []; render();
+  });
+})();
+</script>
+</body>
+</html>
